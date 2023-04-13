@@ -13,9 +13,9 @@ export class AdminDto {
   @ApiProperty()
   name: string;
 
-  @IsString()
+  @IsEmail()
   @ApiProperty()
-  phone: string;
+  email: string;
 
   @IsEnum(ROLES)
   @ApiProperty()

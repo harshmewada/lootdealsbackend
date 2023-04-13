@@ -10,7 +10,7 @@ export class Admin {
   name: string;
 
   @Prop()
-  phone: string;
+  email: string;
 
   @Prop({ enum: ROLES })
   role: string;

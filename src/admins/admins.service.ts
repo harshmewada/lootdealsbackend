@@ -8,23 +8,24 @@ import { Model } from 'mongoose';
 import { PERMISSIONS } from 'src/constants';
 import { AdminDto } from './dto/admins.dto';
 import { Admin } from './schema/admins.schema';
+import * as bcrypt from 'bcrypt';
 
+const saltOrRounds = 10;
 @Injectable()
 export class AdminsService {
   constructor(@InjectModel(Admin.name) private admins: Model<Admin>) {}
 
   async create(data: AdminDto) {
     try {
-      const existing = await this.admins.findOne({ phone: data.phone });
+      const existing = await this.admins.findOne({ email: data.email });
       if (existing) {
-        throw new ConflictException(
-          'Admin with same phone number already exists',
-        );
+        throw new ConflictException('Admin with same email  already exists');
       }
-
+      const hash = await bcrypt.hash(data.password, saltOrRounds);
       await this.admins.create({
         ...data,
         permissions: PERMISSIONS[data.role],
+        password: hash,
       });
 
       return;

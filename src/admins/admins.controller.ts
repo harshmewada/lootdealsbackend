@@ -1,5 +1,6 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/auth/auth.decorator';
 import { AdminsService } from './admins.service';
 import { AdminDto } from './dto/admins.dto';
 
@@ -8,8 +9,14 @@ import { AdminDto } from './dto/admins.dto';
 export class AdminsController {
   constructor(private readonly adminsService: AdminsService) {}
 
+  @Public()
   @Post()
   create(@Body() admin: AdminDto) {
     return this.adminsService.create(admin);
+  }
+
+  @Get()
+  get() {
+    return 'hello';
   }
 }
