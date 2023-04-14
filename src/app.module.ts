@@ -7,6 +7,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './interceptors/Response.interceptor';
+import { PlatformsModule } from './platforms/platforms.module';
+import { FilehostModule } from './filehost/filehost.module';
 
 const DB_URL = process.env.DB_URL || 'mongodb://127.0.0.1:27017/lootdealsv2';
 
@@ -26,6 +28,8 @@ const DB_URL = process.env.DB_URL || 'mongodb://127.0.0.1:27017/lootdealsv2';
     }),
     AdminsModule,
     AuthModule,
+    PlatformsModule,
+    FilehostModule,
   ],
   controllers: [AppController],
   providers: [
