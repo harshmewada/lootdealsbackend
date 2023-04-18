@@ -1,0 +1,85 @@
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  IntersectionType,
+  PickType,
+} from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
+import { PaginationQueryDto, _IdDto } from 'src/commondto';
+
+export class CreateProductDto {
+  @IsOptional()
+  @ApiProperty()
+  productName: string;
+
+  @IsOptional()
+  @ApiProperty()
+  productUrl: string;
+
+  @IsOptional()
+  @ApiProperty()
+  productImage?: string;
+
+  @IsOptional()
+  @ApiProperty()
+  platformId: string;
+
+  @IsOptional()
+  @ApiProperty()
+  categoryId: string;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  isActive: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  isExpired: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  createdBy: string;
+}
+
+export class UpdateProductDto extends IntersectionType(
+  CreateProductDto,
+  _IdDto,
+) {}
+export class ProductDto {
+  @IsString()
+  @ApiProperty()
+  productName: string;
+
+  @IsString()
+  @ApiProperty()
+  productUrl: string;
+
+  @IsString()
+  @ApiProperty()
+  productImage: string;
+
+  @IsOptional()
+  @ApiProperty()
+  platformId: string;
+
+  @IsOptional()
+  @ApiProperty()
+  categoryId: string;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  isActive: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  isExpired: boolean;
+
+  @IsString()
+  @ApiPropertyOptional()
+  createdBy: string;
+}
+
+export class ProductQueryDto extends IntersectionType(
+  PaginationQueryDto,
+  PickType(UpdateProductDto, ['productName'] as const),
+) {}

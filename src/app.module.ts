@@ -9,6 +9,8 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './interceptors/Response.interceptor';
 import { PlatformsModule } from './platforms/platforms.module';
 import { FilehostModule } from './filehost/filehost.module';
+import { CategoryModule } from './category/category.module';
+import { ProductsModule } from './products/products.module';
 
 const DB_URL = process.env.DB_URL || 'mongodb://127.0.0.1:27017/lootdealsv2';
 
@@ -30,6 +32,8 @@ const DB_URL = process.env.DB_URL || 'mongodb://127.0.0.1:27017/lootdealsv2';
     AuthModule,
     PlatformsModule,
     FilehostModule,
+    CategoryModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [

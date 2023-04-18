@@ -7,14 +7,14 @@ import {
 import { IsOptional, IsString } from 'class-validator';
 import { PaginationQueryDto, _IdDto } from 'src/commondto';
 
-export class CreatePlatformDto {
+export class CreateCategoryDto {
   @IsOptional()
   @ApiProperty()
-  platformName: string;
+  categoryName: string;
 
   @IsOptional()
-  @ApiProperty()
-  platformImage?: string;
+  @ApiPropertyOptional()
+  enableNotification: boolean;
 
   @IsOptional()
   @ApiPropertyOptional()
@@ -25,18 +25,18 @@ export class CreatePlatformDto {
   createdBy: string;
 }
 
-export class UpdatePlatformDto extends IntersectionType(
-  CreatePlatformDto,
+export class UpdateCategoryDto extends IntersectionType(
+  CreateCategoryDto,
   _IdDto,
 ) {}
-export class PlatformDto {
+export class CategoryDto {
   @IsString()
   @ApiProperty()
-  platformName: string;
+  categoryName: string;
 
   @IsString()
   @ApiProperty()
-  platformImage: string;
+  enableNotification: boolean;
 
   @IsOptional()
   @ApiPropertyOptional()
@@ -47,7 +47,7 @@ export class PlatformDto {
   createdBy: string;
 }
 
-export class PlatformQueryDto extends IntersectionType(
+export class CategoryQueryDto extends IntersectionType(
   PaginationQueryDto,
-  PickType(UpdatePlatformDto, ['platformName'] as const),
+  PickType(UpdateCategoryDto, ['categoryName'] as const),
 ) {}
