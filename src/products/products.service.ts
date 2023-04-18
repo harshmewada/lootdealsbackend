@@ -33,6 +33,11 @@ export class ProductsService {
   async deleteOne(id: string) {
     return await this.product.findByIdAndDelete(id);
   }
+
+  async deleteBatch(ids: string[]) {
+    const deleteResponse = await this.product.deleteMany({ _id: { $in: ids } });
+    return deleteResponse.acknowledged;
+  }
   async findAll(Query: ProductQueryDto) {
     // await new Promise((resolve) => setTimeout(resolve, 5000));
     return await getPaginatedResponse({

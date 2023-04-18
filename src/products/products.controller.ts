@@ -69,6 +69,12 @@ export class ProductsController {
     return await this.ProductsService.deleteOne(id);
   }
 
+  @Delete('batch')
+  async deleteBatch(@Body() ids: string[]) {
+    console.log('ids', ids);
+    return await this.ProductsService.deleteBatch(ids);
+  }
+
   @Get()
   async findAll(@Query() data: ProductQueryDto) {
     return await this.ProductsService.findAll(data);

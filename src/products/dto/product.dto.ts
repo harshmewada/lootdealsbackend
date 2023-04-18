@@ -16,6 +16,10 @@ export class CreateProductDto {
   @ApiProperty()
   productUrl: string;
 
+  @IsString()
+  @ApiProperty()
+  description: string;
+
   @IsOptional()
   @ApiProperty()
   productImage?: string;
@@ -29,12 +33,28 @@ export class CreateProductDto {
   categoryId: string;
 
   @IsOptional()
+  @ApiProperty()
+  mrpPrice: string;
+
+  @IsOptional()
+  @ApiProperty()
+  sellPrice: string;
+
+  @IsOptional()
+  @ApiProperty()
+  discount: string;
+
+  @IsOptional()
   @ApiPropertyOptional()
   isActive: boolean;
 
   @IsOptional()
   @ApiPropertyOptional()
   isExpired: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  isAutoAdded: boolean;
 
   @IsOptional()
   @ApiPropertyOptional()
@@ -50,9 +70,25 @@ export class ProductDto {
   @ApiProperty()
   productName: string;
 
+  @IsOptional()
+  @ApiProperty()
+  mrpPrice: string;
+
+  @IsOptional()
+  @ApiProperty()
+  sellPrice: string;
+
+  @IsOptional()
+  @ApiProperty()
+  discount: string;
+
   @IsString()
   @ApiProperty()
   productUrl: string;
+
+  @IsString()
+  @ApiProperty()
+  description: string;
 
   @IsString()
   @ApiProperty()
@@ -73,6 +109,10 @@ export class ProductDto {
   @IsOptional()
   @ApiPropertyOptional()
   isExpired: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  isAutoAdded: boolean;
 
   @IsString()
   @ApiPropertyOptional()
