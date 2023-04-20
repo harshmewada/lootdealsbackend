@@ -32,13 +32,16 @@ export class Product {
   // categoryName: string;
 
   @Prop()
-  mrpPrice: string;
+  basePrice: string;
 
   @Prop()
-  sellPrice: string;
+  salePrice: string;
 
   @Prop()
   discount: string;
+
+  @Prop()
+  amazonProductId: string;
 
   @Prop({ default: false })
   isExpired: boolean;

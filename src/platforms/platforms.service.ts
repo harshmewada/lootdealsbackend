@@ -4,6 +4,7 @@ import { query } from 'express';
 import { Model } from 'mongoose';
 import { PaginationQueryDto } from 'src/commondto';
 import { getPaginatedResponse } from 'src/utils/getPaginatedResponse';
+import { removeFileSync } from 'src/utils/removeFileSync';
 import {
   PlatformDto,
   PlatformQueryDto,
@@ -25,7 +26,9 @@ export class PlatformsService {
   }
 
   async deleteOne(id: string) {
-    return await this.platform.findByIdAndDelete(id);
+    const deleted = await this.platform.findByIdAndDelete(id);
+    removeFileSync(deleted?.platformImage);
+    return deleted;
   }
   async find(Query: PlatformQueryDto) {
     // await new Promise((resolve) => setTimeout(resolve, 5000));

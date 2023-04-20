@@ -7,9 +7,15 @@ import {
   Platform,
   PlatformSchema,
 } from 'src/platforms/schema/platforms.schema';
+import { ConfigModule } from '@nestjs/config';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
+    BullModule.registerQueue({
+      name: 'queue',
+    }),
+    ConfigModule,
     MongooseModule.forFeature([
       { name: Product.name, schema: ProductSchema },
 
@@ -18,5 +24,6 @@ import {
   ],
   controllers: [ProductsController],
   providers: [ProductsService],
+  exports: [ProductsService],
 })
 export class ProductsModule {}

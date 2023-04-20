@@ -79,4 +79,9 @@ export class ProductsController {
   async findAll(@Query() data: ProductQueryDto) {
     return await this.ProductsService.findAll(data);
   }
+
+  @Get('fromAmazon')
+  async amazonProduct(@Query('productId') productId: string) {
+    return await this.ProductsService.getAmazonProduct(productId);
+  }
 }

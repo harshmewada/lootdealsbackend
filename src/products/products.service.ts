@@ -1,21 +1,41 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Platform } from 'src/platforms/schema/platforms.schema';
 import { getPaginatedResponse } from 'src/utils/getPaginatedResponse';
+import { removeFileSync } from 'src/utils/removeFileSync';
 import {
   ProductDto,
   ProductQueryDto,
   UpdateProductDto,
 } from './dto/product.dto';
 import { Product } from './schema/product.schema';
-
+import * as moment from 'moment';
+import { Job, Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
+const amazonApi = require('amazon-paapi');
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectModel(Product.name) private product: Model<Product>,
     @InjectModel(Platform.name) private platform: Model<Platform>,
+    private configService: ConfigService,
+    @InjectQueue('queue') private queue: Queue,
   ) {}
+  amazonCreds = {
+    AccessKey: this.configService.get('AMAZON_ACCESS_KEY'),
+    SecretKey: this.configService.get('AMAZON_SECRET_KEY'),
+    PartnerTag: this.configService.get('AMAZON_PARTENER_TAG'),
+    PartnerType: this.configService.get('AMAZON_PARTNER_TYPE'),
+    Marketplace: this.configService.get('AMAZON_MARKETPLACE'),
+  };
+
   async create(createProductDto: ProductDto) {
     const platform = await this.platform.findById(createProductDto.platformId);
     return await this.product.create({
@@ -31,11 +51,18 @@ export class ProductsService {
   }
 
   async deleteOne(id: string) {
-    return await this.product.findByIdAndDelete(id);
+    const deleted = await this.product.findByIdAndDelete(id);
+
+    removeFileSync(deleted?.productImage);
+
+    return;
   }
 
   async deleteBatch(ids: string[]) {
     const deleteResponse = await this.product.deleteMany({ _id: { $in: ids } });
+
+    // console.log('batch respiobnse', deleteResponse);
+
     return deleteResponse.acknowledged;
   }
   async findAll(Query: ProductQueryDto) {
@@ -46,6 +73,135 @@ export class ProductsService {
       findQuery: productQuery(Query),
     });
   }
+
+  async getAmazonProduct(productId: string) {
+    console.log('productID', productId);
+    const requestParameters = {
+      ItemIds: [productId],
+      Condition: 'New',
+      Resources: [
+        'Images.Primary.Medium',
+        'ItemInfo.Title',
+        'Offers.Listings.Price',
+      ],
+    };
+
+    const productData = await amazonApi
+      .GetItems(this.amazonCreds, requestParameters)
+      .then((res) => {
+        return JSON.stringify(res);
+      })
+      .then((data) => {
+        const response = JSON.parse(data);
+        console.log('amazon response', response);
+
+        if (response?.Errors?.length > 0) {
+          throw new HttpException(
+            response?.Errors?.[0]?.Message || 'Product error',
+            HttpStatus.NO_CONTENT,
+          );
+        }
+        const item = response.ItemsResult.Items[0];
+
+        const productResponse = {
+          productName: item.ItemInfo.Title.DisplayValue,
+          productUrl: item.DetailPageURL,
+          salePrice: item.Offers.Listings[0].Price.Amount,
+          basePrice:
+            item.Offers.Listings[0].Price.Amount +
+            item.Offers.Listings[0].Price.Savings.Amount,
+          productImage: item.Images.Primary.Medium.URL,
+          amazonProductId: productId,
+        };
+        return productResponse;
+      })
+      .catch((error) => {
+        // catch an error.
+        console.log('error', error);
+        throw new InternalServerErrorException(error);
+      });
+
+    return productData;
+  }
+
+  //runs every day
+
+  async priceCheckForLast24hour() {
+    try {
+      const autoProducts = await this.product.find({
+        amazonProductId: { $exists: true },
+        createdAt: {
+          $gte: moment().startOf('day').toDate(),
+          $lte: moment().endOf('day').toDate(),
+        },
+        isExpired: false,
+      });
+      if (autoProducts?.length > 0) {
+        const requestParameters = {
+          ItemIds: autoProducts.map((El) => El.amazonProductId),
+          Condition: 'New',
+          Resources: [
+            'Images.Primary.Medium',
+            'ItemInfo.Title',
+            'Offers.Listings.Price',
+          ],
+        };
+
+        const productData = await amazonApi
+          .GetItems(this.amazonCreds, requestParameters)
+          .then((res) => {
+            return JSON.stringify(res);
+          })
+          .then((data) => {
+            const response = JSON.parse(data);
+
+            if (response?.Errors?.length > 0) {
+              throw new Error(response?.Errors);
+            }
+            if (response?.ItemsResult?.Items?.length > 0) {
+              return response?.ItemsResult?.Items?.map((item) => {
+                return {
+                  productName: item.ItemInfo.Title.DisplayValue,
+                  productUrl: item.DetailPageURL,
+                  salePrice: 800 || item.Offers.Listings[0].Price.Amount,
+                  basePrice:
+                    item.Offers.Listings[0].Price.Amount +
+                    item.Offers.Listings[0].Price.Savings.Amount,
+                  productImage: item.Images.Primary.Medium.URL,
+                  amazonProductId: item.ASIN,
+                };
+              });
+            }
+          });
+
+        const productToRemove = autoProducts.filter((el) => {
+          const findReferenceProduct = productData.find(
+            (a) => a.amazonProductId === el.amazonProductId,
+          );
+
+          if (
+            findReferenceProduct &&
+            findReferenceProduct.salePrice > el.salePrice
+          ) {
+            return true;
+          }
+          return false;
+        });
+
+        if (productToRemove?.length > 0) {
+          const ids = productToRemove.map((el) => el._id);
+          await this.product.updateMany(
+            { _id: { $in: ids } },
+            { isExpired: true },
+          );
+        }
+      }
+    } catch (error) {
+      console.log('priceCheckForLast24hour error', error);
+    }
+  }
+
+  async productNotification(job: Job) {}
 }
 
 const productQuery = ({ productName }: ProductQueryDto) => {

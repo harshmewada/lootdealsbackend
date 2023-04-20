@@ -11,13 +11,8 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
-import { PlatformsService } from './platforms.service';
-import {
-  CreatePlatformDto,
-  PlatformDto,
-  PlatformQueryDto,
-  UpdatePlatformDto,
-} from './dto/platform.dto';
+import { OffersService } from './offers.service';
+import { CreateOfferDto, OfferQueryDto, UpdateOfferDto } from './dto/offer.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -25,26 +20,26 @@ import { multerOptions } from 'src/utils/multerOptions';
 import { getFilePath, mimeTypes } from 'src/utils/fileOptions';
 import { PaginationQueryDto } from 'src/commondto';
 
-@ApiTags('platforms')
-@Controller('platform')
-export class PlatformsController {
-  constructor(private readonly platformsService: PlatformsService) {}
+@ApiTags('offers')
+@Controller('offer')
+export class OffersController {
+  constructor(private readonly offersService: OffersService) {}
 
   @Post()
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FileInterceptor('platformImage', multerOptions(mimeTypes.images)),
+    FileInterceptor('offerImage', multerOptions(mimeTypes.images)),
   )
   async create(
-    @Body() createPlatformDto: CreatePlatformDto,
+    @Body() createOfferDto: CreateOfferDto,
     @UploadedFile() file: Express.Multer.File,
     @Req() request: Request,
   ) {
-    return await this.platformsService.create({
-      ...createPlatformDto,
+    return await this.offersService.create({
+      ...createOfferDto,
       createdBy: request['user'].name,
       ...(file && {
-        platformImage: getFilePath(file),
+        offerImage: getFilePath(file),
       }),
     });
   }
@@ -52,31 +47,31 @@ export class PlatformsController {
   @Patch()
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FileInterceptor('platformImage', multerOptions(mimeTypes.images)),
+    FileInterceptor('offerImage', multerOptions(mimeTypes.images)),
   )
   async update(
-    @Body() createPlatformDto: UpdatePlatformDto,
+    @Body() createOfferDto: UpdateOfferDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return await this.platformsService.update({
-      ...createPlatformDto,
+    return await this.offersService.update({
+      ...createOfferDto,
       ...(file && {
-        platformImage: getFilePath(file),
+        offerImage: getFilePath(file),
       }),
     });
   }
 
   @Delete()
   async delete(@Body('_id') id: string) {
-    return await this.platformsService.deleteOne(id);
+    return await this.offersService.deleteOne(id);
   }
 
   @Get('all')
   async findAll() {
-    return await this.platformsService.findAll();
+    return await this.offersService.findAll();
   }
   @Get()
-  async find(@Query() data: PlatformQueryDto) {
-    return await this.platformsService.find(data);
+  async find(@Query() data: OfferQueryDto) {
+    return await this.offersService.find(data);
   }
 }

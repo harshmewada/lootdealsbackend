@@ -34,6 +34,7 @@ export const getPaginatedResponse = async <Type, QueryType>({
   if (pageQuery.page) {
     returnData.data = await model
       .find(findQuery)
+      .sort({ createdAt: -1 })
       .skip(parseInt(pageQuery.page) * pageSize)
       .limit(pageSize)
       .populate(populate);

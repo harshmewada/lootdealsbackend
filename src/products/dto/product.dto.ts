@@ -14,6 +14,10 @@ export class CreateProductDto {
 
   @IsOptional()
   @ApiProperty()
+  amazonProductId: string;
+
+  @IsOptional()
+  @ApiProperty()
   productUrl: string;
 
   @IsString()
@@ -34,11 +38,11 @@ export class CreateProductDto {
 
   @IsOptional()
   @ApiProperty()
-  mrpPrice: string;
+  basePrice: string;
 
   @IsOptional()
   @ApiProperty()
-  sellPrice: string;
+  salePrice: string;
 
   @IsOptional()
   @ApiProperty()
@@ -72,11 +76,15 @@ export class ProductDto {
 
   @IsOptional()
   @ApiProperty()
-  mrpPrice: string;
+  amazonProductId: string;
 
   @IsOptional()
   @ApiProperty()
-  sellPrice: string;
+  basePrice: string;
+
+  @IsOptional()
+  @ApiProperty()
+  salePrice: string;
 
   @IsOptional()
   @ApiProperty()

@@ -11,11 +11,29 @@ import { PlatformsModule } from './platforms/platforms.module';
 import { FilehostModule } from './filehost/filehost.module';
 import { CategoryModule } from './category/category.module';
 import { ProductsModule } from './products/products.module';
-
-const DB_URL = process.env.DB_URL || 'mongodb://127.0.0.1:27017/lootdealsv2';
-
+import { BullModule } from '@nestjs/bull';
+import { QueueConsumer } from './queues/queues.consumer';
+import { OffersModule } from './offers/offers.module';
 @Module({
   imports: [
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        redis: {
+          host: configService.get<string>('REDIS_URL'),
+          port: configService.get<number>('REDIS_PORT'),
+        },
+        defaultJobOptions: {
+          removeOnComplete: true,
+          removeOnFail: true,
+        },
+      }),
+
+      inject: [ConfigService],
+    }),
+    BullModule.registerQueue({
+      name: 'queue',
+    }),
     ConfigModule.forRoot({
       envFilePath: './config/.env.development',
       // isGlobal: true,
@@ -34,6 +52,7 @@ const DB_URL = process.env.DB_URL || 'mongodb://127.0.0.1:27017/lootdealsv2';
     FilehostModule,
     CategoryModule,
     ProductsModule,
+    OffersModule,
   ],
   controllers: [AppController],
   providers: [
@@ -42,6 +61,7 @@ const DB_URL = process.env.DB_URL || 'mongodb://127.0.0.1:27017/lootdealsv2';
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
     },
+    QueueConsumer,
   ],
 })
 export class AppModule {}
