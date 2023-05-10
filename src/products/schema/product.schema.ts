@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import * as mongoose from 'mongoose';
+import mongoose from 'mongoose';
 import { Category } from 'src/category/schema/category.schema';
 import { Platform } from 'src/platforms/schema/platforms.schema';
 
@@ -55,8 +55,12 @@ export class Product {
   @Prop({ default: true })
   isActive: boolean;
 
+  @Prop({ default: false })
+  isManyProducts: boolean;
+
   @Prop()
   createdBy: string;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
+ProductSchema.index({ productName: 'text' }, { unique: true });

@@ -33,10 +33,9 @@ export class QueueConsumer
   ) {}
 
   onApplicationBootstrap() {
-    const duration =
-      '* * * * *' || this.configService.get('PRICE_CRON_INTERVAL');
+    const duration = this.configService.get('PRICE_CRON_INTERVAL');
 
-    this.queue.add('price', {});
+    this.queue.add('price', {}, cronRepeatOptions(duration));
   }
   beforeApplicationShutdown(signal?: string) {
     console.log('end');

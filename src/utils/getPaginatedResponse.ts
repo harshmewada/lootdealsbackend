@@ -1,5 +1,5 @@
 import { ModelDefinition } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import { PaginationQueryDto } from 'src/commondto';
 
 interface Populate {
@@ -14,6 +14,144 @@ interface RequestQuery<T, B> {
   pageQuery: PaginationQueryDto;
   populate?: Populate[];
 }
+
+export const getCursorPaginatedResult = async (
+  model: any,
+  query: PaginationQueryDto,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  call: any,
+  paginate = true,
+  populates: {
+    path: string;
+    model: string;
+    // populate?: {
+    //   path?: string;
+    //   model?: string;
+    // };
+    strictPopulate?: boolean;
+  }[] = [],
+) => {
+  query = query || {};
+
+  let limit = +query.limit || 10;
+  if (limit < 1) {
+    limit = 10;
+  }
+
+  const data = await model
+    .find(call(query))
+    .populate(populates)
+    .sort({ createdAt: -1 })
+
+    .limit(query.limit);
+
+  // , {
+  //   sort: { _id: -1 },
+  //   limit,
+  // })
+
+  let hasNext, hasPrev, lastItem, firstItem;
+  if (data.length) {
+    lastItem = data[data.length - 1]._id;
+    firstItem = data[0]._id;
+
+    // If there is an item with id less than last item (remember, sort is in desc _id), there is a next page
+    const q = { _id: undefined };
+
+    q._id = {
+      $lt: lastItem,
+    };
+    const r = await model.findOne(q);
+    // console.log('next prod', data.length, r?.productName);
+    if (r) {
+      hasNext = true;
+    }
+
+    q._id = {
+      $gt: firstItem,
+    };
+    hasPrev = !!(await model.findOne(q));
+  }
+
+  const totalCount = await model.count(call(query));
+
+  return {
+    data: data,
+    next: hasNext ? `${lastItem}` : null,
+    hasNext,
+    previous: hasPrev ? `${firstItem}` : null,
+    hasPrevious: hasPrev,
+    totalCount,
+  };
+};
+export const getPagination = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  model: any,
+  query: PaginationQueryDto,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  call: any,
+  paginate = true,
+  populates: {
+    path: string;
+    model: string;
+    populate?: {
+      path?: string;
+      model?: string;
+    };
+    strictPopulate?: boolean;
+  }[] = [],
+) => {
+  if (paginate) {
+    const rawQuery = model
+      .find(call(query))
+      .sort({ _id: -1 })
+      .limit(query.limit);
+    let result = null;
+    if (populates.length) {
+      populates.forEach((ele) => rawQuery.populate(ele));
+    }
+    if (!query.next && !query.previous) {
+      result = await generator(query, rawQuery);
+    } else {
+      result = await rawQuery;
+    }
+    result = query.previous ? result.reverse() : result;
+    const lastElementId = result[result.length - 1]?._id;
+    const nextElement = await model.findOne({
+      _id: { $gt: result[result.length - 1]?._id },
+    });
+    console.log('lastElementId', lastElementId, nextElement._id);
+    const next = nextElement?._id;
+    const previous: ObjectId = query.page == 1 ? null : result[0]?._id;
+    delete query.next;
+    delete query.previous;
+    const totalCount = await model.count(call(query));
+
+    return {
+      data: result,
+      next,
+      hasNext: Boolean(next),
+      previous,
+      hasPrevious: Boolean(previous),
+      totalCount,
+    };
+  } else {
+    return await model.find(call(query)).sort({ _id: -1 }).limit(query.limit);
+  }
+};
+const generator = (query: any, rawQuery: any) => {
+  if (query.page == undefined) {
+    query.page = 1;
+  }
+  if (query.limit == undefined) {
+    query.limit = 10;
+  }
+  if (typeof query.limit == 'string') {
+    query['limit'] = parseInt(query.limit);
+  }
+  let result = rawQuery.skip((query.page - 1) * query.limit);
+  return result;
+};
 
 export const getPaginatedResponse = async <Type, QueryType>({
   model,
@@ -35,7 +173,7 @@ export const getPaginatedResponse = async <Type, QueryType>({
     returnData.data = await model
       .find(findQuery)
       .sort({ createdAt: -1 })
-      .skip(parseInt(pageQuery.page) * pageSize)
+      .skip(pageQuery.page * pageSize)
       .limit(pageSize)
       .populate(populate);
   }

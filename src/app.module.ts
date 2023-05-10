@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -14,6 +14,9 @@ import { ProductsModule } from './products/products.module';
 import { BullModule } from '@nestjs/bull';
 import { QueueConsumer } from './queues/queues.consumer';
 import { OffersModule } from './offers/offers.module';
+import { SettingModule } from './setting/setting.module';
+import { AppApisModule } from './app-apis/app-apis.module';
+import { logger } from './middleware/logger.middleware';
 @Module({
   imports: [
     BullModule.forRootAsync({
@@ -53,6 +56,8 @@ import { OffersModule } from './offers/offers.module';
     CategoryModule,
     ProductsModule,
     OffersModule,
+    SettingModule,
+    AppApisModule,
   ],
   controllers: [AppController],
   providers: [
@@ -64,4 +69,8 @@ import { OffersModule } from './offers/offers.module';
     QueueConsumer,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  // configure(consumer: MiddlewareConsumer) {
+  //   consumer.apply(logger).forRoutes('*');
+  // }
+}

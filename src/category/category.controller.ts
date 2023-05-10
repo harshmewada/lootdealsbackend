@@ -7,6 +7,8 @@ import {
   Patch,
   Delete,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import {
@@ -14,7 +16,11 @@ import {
   CategoryQueryDto,
   UpdateCategoryDto,
 } from './dto/category.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerOptions } from 'src/utils/multerOptions';
+import { getFilePath, mimeTypes } from 'src/utils/fileOptions';
+import { Request } from 'express';
 
 @ApiTags('categorys')
 @Controller('category')
@@ -22,20 +28,39 @@ export class CategoryController {
   constructor(private readonly categorysService: CategoryService) {}
 
   @Post()
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('categoryImage', multerOptions(mimeTypes.images)),
+  )
   async create(
     @Body() createCategoryDto: CreateCategoryDto,
     @Req() request: Request,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     return await this.categorysService.create({
       ...createCategoryDto,
       createdBy: request['user'].name,
+      ...(file && {
+        categoryImage: getFilePath(file),
+      }),
     });
   }
 
   @Patch()
-  async update(@Body() createCategoryDto: UpdateCategoryDto) {
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('categoryImage', multerOptions(mimeTypes.images)),
+  )
+  async update(
+    @Body() createCategoryDto: UpdateCategoryDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    console.log('update cat', createCategoryDto);
     return await this.categorysService.update({
       ...createCategoryDto,
+      ...(file && {
+        categoryImage: getFilePath(file),
+      }),
     });
   }
 

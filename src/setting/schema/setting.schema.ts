@@ -1,0 +1,29 @@
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
+export type SettingDocument = HydratedDocument<Setting>;
+
+@Schema({ timestamps: true })
+export class Setting {
+  @Prop({ default: '' })
+  email: string;
+
+  @Prop({ default: '' })
+  telegramLink: string;
+
+  @Prop({ default: '' })
+  telegramBannerLink: string;
+
+  @Prop({ default: '' })
+  youtubeLink: string;
+
+  @Prop({ default: '' })
+  privacyLink: string;
+
+  @Prop({ default: true })
+  showAds: boolean;
+
+  @Prop({ default: true })
+  showTelegramBanner: boolean;
+}
+
+export const SettingSchema = SchemaFactory.createForClass(Setting);

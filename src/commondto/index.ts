@@ -8,7 +8,10 @@ export class _IdDto {
 
 export class PaginationQueryDto {
   @ApiPropertyOptional()
-  page?: string;
+  page?: number;
+
+  @ApiPropertyOptional({ default: 10 })
+  limit?: number;
 
   @ApiPropertyOptional()
   pageSize?: string;
@@ -18,4 +21,10 @@ export class PaginationQueryDto {
 
   @ApiPropertyOptional()
   previous?: string;
+
+  @ApiPropertyOptional()
+  fromDate?: string;
+
+  @ApiPropertyOptional()
+  toDate?: string;
 }

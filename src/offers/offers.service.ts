@@ -16,6 +16,7 @@ export class OffersService {
   }
 
   async update(createOfferDto: UpdateOfferDto) {
+    console.log('update', createOfferDto);
     return await this.offer.findByIdAndUpdate(createOfferDto._id, {
       ...createOfferDto,
     });

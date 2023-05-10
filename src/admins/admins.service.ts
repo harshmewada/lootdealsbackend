@@ -8,7 +8,7 @@ import { Model } from 'mongoose';
 import { PERMISSIONS } from 'src/constants';
 import { AdminDto } from './dto/admins.dto';
 import { Admin } from './schema/admins.schema';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 
 const saltOrRounds = 10;
 @Injectable()

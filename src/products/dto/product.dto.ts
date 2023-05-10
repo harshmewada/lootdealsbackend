@@ -2,6 +2,7 @@ import {
   ApiProperty,
   ApiPropertyOptional,
   IntersectionType,
+  PartialType,
   PickType,
 } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
@@ -62,6 +63,10 @@ export class CreateProductDto {
 
   @IsOptional()
   @ApiPropertyOptional()
+  isManyProducts: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
   createdBy: string;
 }
 
@@ -116,6 +121,10 @@ export class ProductDto {
 
   @IsOptional()
   @ApiPropertyOptional()
+  isManyProducts: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
   isExpired: boolean;
 
   @IsOptional()
@@ -129,5 +138,5 @@ export class ProductDto {
 
 export class ProductQueryDto extends IntersectionType(
   PaginationQueryDto,
-  PickType(UpdateProductDto, ['productName'] as const),
+  PartialType(UpdateProductDto),
 ) {}

@@ -19,7 +19,7 @@ import {
   UpdatePlatformDto,
 } from './dto/platform.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Express } from 'express';
+import { Express, Request } from 'express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { multerOptions } from 'src/utils/multerOptions';
 import { getFilePath, mimeTypes } from 'src/utils/fileOptions';

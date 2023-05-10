@@ -11,6 +11,12 @@ export class Category {
   @Prop({ default: true })
   enableNotification: boolean;
 
+  @Prop({ default: false })
+  showInHomepage: boolean;
+
+  @Prop()
+  categoryImage: string;
+
   @Prop({ default: true })
   isActive: boolean;
 

@@ -9,7 +9,13 @@ export class Offer {
   offerName: string;
 
   @Prop()
+  offerUrl: string;
+
+  @Prop()
   offerImage: string;
+
+  @Prop({ default: false })
+  showInHomepage: boolean;
 
   @Prop({ default: true })
   isActive: boolean;

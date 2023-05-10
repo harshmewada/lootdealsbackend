@@ -25,7 +25,7 @@ export const multerOptions = (
       file: Express.Multer.File,
       cb: CallBackTypefileFilter,
     ) => {
-      // console.log('file mimte', file.mimetype, file.mimetype.match(mimetype));
+      console.log('file mimte', file.mimetype, file.mimetype.match(mimetype));
       if (mimetype && file.mimetype.match(mimetype)) {
         cb(null, true);
       } else if (

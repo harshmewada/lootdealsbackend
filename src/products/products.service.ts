@@ -16,9 +16,11 @@ import {
   UpdateProductDto,
 } from './dto/product.dto';
 import { Product } from './schema/product.schema';
-import * as moment from 'moment';
+import moment from 'moment';
 import { Job, Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
+import { calculateDiscount } from 'src/utils/calculateDiscount';
+import { Category } from 'src/category/schema/category.schema';
 const amazonApi = require('amazon-paapi');
 @Injectable()
 export class ProductsService {
@@ -41,12 +43,20 @@ export class ProductsService {
     return await this.product.create({
       ...createProductDto,
       platformName: platform.platformName,
+      discount: calculateDiscount(
+        parseFloat(createProductDto.basePrice),
+        parseFloat(createProductDto.salePrice),
+      ),
     });
   }
 
   async update(createProductDto: UpdateProductDto) {
     return await this.product.findByIdAndUpdate(createProductDto._id, {
       ...createProductDto,
+      discount: calculateDiscount(
+        parseFloat(createProductDto.basePrice),
+        parseFloat(createProductDto.salePrice),
+      ),
     });
   }
 
@@ -71,6 +81,7 @@ export class ProductsService {
       model: this.product,
       pageQuery: Query,
       findQuery: productQuery(Query),
+      populate: [{ path: 'categoryId', model: Category.name }],
     });
   }
 
@@ -96,9 +107,11 @@ export class ProductsService {
         console.log('amazon response', response);
 
         if (response?.Errors?.length > 0) {
+          const apiError = response?.Errors?.[0]?.Message;
           throw new HttpException(
-            response?.Errors?.[0]?.Message || 'Product error',
+            apiError || 'Product error',
             HttpStatus.NO_CONTENT,
+            { cause: response.Errors },
           );
         }
         const item = response.ItemsResult.Items[0];

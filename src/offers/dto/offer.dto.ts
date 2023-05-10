@@ -14,11 +14,19 @@ export class CreateOfferDto {
 
   @IsOptional()
   @ApiProperty()
+  offerUrl: string;
+
+  @IsOptional()
+  @ApiProperty()
   offerImage?: string;
 
   @IsOptional()
   @ApiPropertyOptional()
   isActive: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  showInHomepage: boolean;
 
   @IsOptional()
   @ApiPropertyOptional()
@@ -33,11 +41,19 @@ export class OfferDto {
 
   @IsString()
   @ApiProperty()
+  offerUrl: string;
+
+  @IsString()
+  @ApiProperty()
   offerImage: string;
 
   @IsOptional()
   @ApiPropertyOptional()
   isActive: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  showInHomepage: boolean;
 
   @IsString()
   @ApiPropertyOptional()

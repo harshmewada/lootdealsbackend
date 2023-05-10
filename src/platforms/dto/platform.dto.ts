@@ -2,6 +2,7 @@ import {
   ApiProperty,
   ApiPropertyOptional,
   IntersectionType,
+  PartialType,
   PickType,
 } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
@@ -49,5 +50,5 @@ export class PlatformDto {
 
 export class PlatformQueryDto extends IntersectionType(
   PaginationQueryDto,
-  PickType(UpdatePlatformDto, ['platformName'] as const),
+  PartialType(UpdatePlatformDto),
 ) {}

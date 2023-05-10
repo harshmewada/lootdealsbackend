@@ -17,8 +17,16 @@ export class CreateCategoryDto {
   enableNotification: boolean;
 
   @IsOptional()
+  @ApiProperty()
+  categoryImage?: string;
+
+  @IsOptional()
   @ApiPropertyOptional()
   isActive: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  showInHomepage: boolean;
 
   @IsOptional()
   @ApiPropertyOptional()
@@ -34,6 +42,10 @@ export class CategoryDto {
   @ApiProperty()
   categoryName: string;
 
+  @IsOptional()
+  @ApiProperty()
+  categoryImage: string;
+
   @IsString()
   @ApiProperty()
   enableNotification: boolean;
@@ -41,6 +53,10 @@ export class CategoryDto {
   @IsOptional()
   @ApiPropertyOptional()
   isActive: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  showInHomepage: boolean;
 
   @IsString()
   @ApiPropertyOptional()

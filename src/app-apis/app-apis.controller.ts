@@ -1,0 +1,48 @@
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Public } from 'src/auth/auth.decorator';
+import { ProductQueryDto } from 'src/products/dto/product.dto';
+import { AppApisService } from './app-apis.service';
+
+@Controller('app')
+@Public()
+export class AppApisController {
+  constructor(private readonly appApisService: AppApisService) {}
+
+  @Get('home')
+  async homePage() {
+    console.log('home req');
+    return this.appApisService.getHomePage();
+  }
+
+  @Get('setting')
+  async settingData() {
+    console.log('home req');
+    return this.appApisService.settingData();
+  }
+
+  @Get('product')
+  async product(@Query('id') id: string) {
+    console.log('product req', id);
+    return this.appApisService.getProduct(id);
+  }
+
+  @Get('products')
+  async getProducts(@Query() query: ProductQueryDto) {
+    return this.appApisService.getProducts(query);
+  }
+
+  @Get('product/increaseViewCount/:id')
+  async increaseProductViewCount(@Param('id') id: string) {
+    return this.appApisService.increaseProductViewCount(id);
+  }
+
+  @Get('categories')
+  async getCategories() {
+    return this.appApisService.getCategories();
+  }
+
+  @Get('offers')
+  async getOffers() {
+    return this.appApisService.getOffers();
+  }
+}
