@@ -10,6 +10,9 @@ export class Setting {
   @Prop({ default: '' })
   telegramLink: string;
 
+  @Prop()
+  telegramBannerImage: string;
+
   @Prop({ default: '' })
   telegramBannerLink: string;
 

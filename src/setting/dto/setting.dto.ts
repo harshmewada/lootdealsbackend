@@ -15,6 +15,10 @@ export class SettingDto {
   @ApiPropertyOptional()
   telegramBannerLink: string;
 
+  @IsOptional()
+  @ApiPropertyOptional()
+  telegramBannerImage?: string;
+
   @IsString()
   @ApiPropertyOptional()
   youtubeLink: string;
