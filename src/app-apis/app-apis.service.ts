@@ -11,6 +11,7 @@ import {
   getCursorPaginatedResult,
   getPagination,
 } from 'src/utils/getPaginatedResponse';
+import { NotificationToken } from './shcema/notificationToken.schema';
 
 @Injectable()
 export class AppApisService {
@@ -18,6 +19,8 @@ export class AppApisService {
     @InjectModel(Category.name) private category: Model<Category>,
     @InjectModel(Offer.name) private offer: Model<Offer>,
     @InjectModel(Product.name) private product: Model<Product>,
+    @InjectModel(NotificationToken.name)
+    private notificationToken: Model<NotificationToken>,
 
     private settingService: SettingService,
   ) {}
@@ -114,6 +117,10 @@ export class AppApisService {
   async increaseProductViewCount(id: string) {
     // return await this.settingService.get();
     await this.product.findByIdAndUpdate(id, { $inc: { viewCount: 1 } });
+  }
+
+  async registerNotificationToken(token: string) {
+    await this.notificationToken.create({ token });
   }
 
   async getProducts(query: ProductQueryDto) {

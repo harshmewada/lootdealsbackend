@@ -84,4 +84,9 @@ export class ProductsController {
   async amazonProduct(@Query('productId') productId: string) {
     return await this.ProductsService.getAmazonProduct(productId);
   }
+
+  @Post('sendnotification')
+  async sendNotification(@Body('ids') ids: string[]) {
+    return await this.ProductsService.sendProductNotification(ids);
+  }
 }

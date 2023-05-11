@@ -17,6 +17,7 @@ import { OffersModule } from './offers/offers.module';
 import { SettingModule } from './setting/setting.module';
 import { AppApisModule } from './app-apis/app-apis.module';
 import { logger } from './middleware/logger.middleware';
+import { NotificationModule } from './notification/notification.module';
 @Module({
   imports: [
     BullModule.forRootAsync({
@@ -58,6 +59,7 @@ import { logger } from './middleware/logger.middleware';
     OffersModule,
     SettingModule,
     AppApisModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

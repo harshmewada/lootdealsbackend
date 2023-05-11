@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "lootdeals-cb570",
+  "private_key_id": "612318f307575b3c7b12f8d52ecd2fb9014707dd",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDRHMlPk+5h18c1\nX6iV6XkLrtiXShfCQErJYWn8M//AVAwoyMARgMUKl9gY1YaW/g/xqEb6pU6ehkTu\n8DThqK3ncuR/CggFGN5DY27L+V7y6+9ADM6Vd1ycbt+nWjFo5Kmg0SFgFQ7YXz/A\nYjc/NSqqqLer/EviCVDWpWdCBp07/zbVN5sWJAj6EEKGfhrhF3AnKobzYmAtDd+O\nl6GflqJ2XEwyvdgoG+VasdmlWaJmXBiUAc6vYJvfQCs3GK/5UcpVOT8b7LKbVa/j\n6BAG0ZeYM66EpFb3r6goceNZUsafQQA3k7LfBo6Ctw+Bf16chhOUgXGO8B8MrH34\nJ4khO6ZbAgMBAAECggEAAd1NgjMhy1I0NCqf2IOrZkpEeMeFV2BhX6hJsfZOD8tF\nYdELErI2OjZJC/ejapHmAdPr8MIr5Z1G3LvcN4LcghVz1MTPINSBmXzieQPGhUig\nlSPywkG9MVE1F0s7k4wuYwEFA36h55X50zT3pHhMjWxRruvh9VL7Rd6rAVteaDGF\n4sO529+SIb5t/5GeGpgzaULoKscEZoVzCihmQ6I/Z2Blw9oKc0TGa4bGfMTRCh3+\n/z+jzWimLz9cvvvauPQuflnWhfkjNT/5SSVSuEAkXumcddq+C2/YxWOP+xyuEStF\no1nYY//tMqmIaYl9UH9V8nOEYnpBEoY0ESqLsOFRMQKBgQDs+qdyZE2PS2dpR2C+\nj4+fXZqZCx6Yt1g6vBzgfcsf7XW7q+VRZXKYOD9S68OfJGZ5TiCczdG/itIDX12Y\n/OOXbhK9VVSSrX0pBgHwU/2a68/6i3grSTr1a17Nfp7F6pMYOwyGqdNmP0XEfRQO\nC0UIFf4Mtdsu8cgk7Kl4tyKCCQKBgQDh5YowwZFAlzGmkqtN6gEFveLV8yL9Qcln\nqNAlcZkceYIHuns5Od+d5/KX3WCl0vT866SRXe2rdAbD8uwj69MPLtrFCOWXEfuh\n+hvsexplW1kGbOPIAb5a3jl6B/oFcfBKbvQ6cO900fHq5TXuSpSHR4vvlXrGlQC2\nMxd2vqYuQwKBgH1WHNXtou/U677M16gx+b5KHYgwT2BqKCn4cDVzkskyKIC367Nf\nOnqz1RogQ/iZofEqlykX2oW6AFV0TOarahwfRZ4J0Y86XuYhnUjkw076xac3uLj8\nJEjFHwEEpSj8Zgv8vyVCEOMVN+syVDcRUtNx/knurRxpGHgfC4sjIQcxAoGBAJT3\nXAP/AhyIGBPy0MjWscnpiLbyWXaNdZXIO0sV+JRQhLE4Bp6cTZzCIraHJH71+Nz5\nQFMkj+Dq6LM7dQHTOCHhEh+xWEYhc8FDQDrYi3Wfobuc/zEcBT3DIkAZFoWUt5M+\nTAxmAWMWN+RhNwlnYT88rUlXV9mw1QFR+/0wiEIlAoGBALFBpL4G0rgpHGgwwEgU\n4QK8UIEdP2a8zrqK8/YKfIPURDc51xpM9EW7LhhcoYNHQZt+JnHinHNfoSa4tEiT\n/xq5euyXVu0HKC/demObE4lT5RS+lz00rCCJkyY/a5YDNqvFZfvwY8VvWdoPgMBa\nmZzOxGwZRVU4BnZSPh0AkWqx\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-1is74@lootdeals-cb570.iam.gserviceaccount.com",
+  "client_id": "114064170194813616629",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-1is74%40lootdeals-cb570.iam.gserviceaccount.com"
+}

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Public } from 'src/auth/auth.decorator';
 import { ProductQueryDto } from 'src/products/dto/product.dto';
 import { AppApisService } from './app-apis.service';
@@ -44,5 +44,10 @@ export class AppApisController {
   @Get('offers')
   async getOffers() {
     return this.appApisService.getOffers();
+  }
+
+  @Post('registernotificationtoken')
+  async registerNotificationToken(@Body('token') token: string) {
+    return this.appApisService.registerNotificationToken(token);
   }
 }

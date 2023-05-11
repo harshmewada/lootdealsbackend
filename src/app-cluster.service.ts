@@ -7,6 +7,9 @@ const numCPUs = os.cpus().length - 1;
 @Injectable()
 export class AppClusterService {
   static clusterize(callback: Function): void {
+    console.log('process', process.env);
+    callback();
+    return;
     const AppCluster = cluster as Cluster;
 
     if (AppCluster.isPrimary) {

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Platform } from 'src/platforms/schema/platforms.schema';
 import { getPaginatedResponse } from 'src/utils/getPaginatedResponse';
 import { removeFileSync } from 'src/utils/removeFileSync';
@@ -21,14 +21,19 @@ import { Job, Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { calculateDiscount } from 'src/utils/calculateDiscount';
 import { Category } from 'src/category/schema/category.schema';
+import { NotificationToken } from 'src/app-apis/shcema/notificationToken.schema';
+import { NotificationService } from 'src/notification/notification.service';
+
 const amazonApi = require('amazon-paapi');
+
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectModel(Product.name) private product: Model<Product>,
     @InjectModel(Platform.name) private platform: Model<Platform>,
+
     private configService: ConfigService,
-    @InjectQueue('queue') private queue: Queue,
+    private notificationService: NotificationService, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue,
   ) {}
   amazonCreds = {
     AccessKey: this.configService.get('AMAZON_ACCESS_KEY'),
@@ -213,8 +218,43 @@ export class ProductsService {
       console.log('priceCheckForLast24hour error', error);
     }
   }
+  async sendProductNotification(ids: string[]) {
+    console.log('iids', ids);
+    let newIds = ids.map(function (el) {
+      return new Types.ObjectId(el);
+    });
 
-  async productNotification(job: Job) {}
+    // const products = await this.product.aggregate([
+    //   { $match: { _id: { $in: newIds }, isActive: true } },
+    //   // {
+    //   //   $group: { _id: null, array: { $push: '$_id' } },
+    //   // },
+
+    //   // {
+    //   //   $project: { array: true, _id: false },
+    //   // },
+    // ]);
+
+    const products = await this.product.find({
+      _id: { $in: newIds },
+    });
+    console.log('products', products);
+
+    await Promise.all(
+      products.map(async (el) => {
+        await this.notificationService.sendNotification({
+          title: el.productName,
+          body: 'New Super Deals Added',
+          imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
+            el.productImage
+          }`,
+          // productData: {},
+        });
+      }),
+    );
+    // await sendNot
+  }
+  //
 }
 
 const productQuery = ({ productName }: ProductQueryDto) => {

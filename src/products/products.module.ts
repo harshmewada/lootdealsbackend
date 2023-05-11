@@ -9,6 +9,11 @@ import {
 } from 'src/platforms/schema/platforms.schema';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
+import {
+  NotificationToken,
+  NotificationTokenSchema,
+} from 'src/app-apis/shcema/notificationToken.schema';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Module({
   imports: [
@@ -20,10 +25,11 @@ import { BullModule } from '@nestjs/bull';
       { name: Product.name, schema: ProductSchema },
 
       { name: Platform.name, schema: PlatformSchema },
+      { name: NotificationToken.name, schema: NotificationTokenSchema },
     ]),
   ],
   controllers: [ProductsController],
-  providers: [ProductsService],
+  providers: [ProductsService, NotificationService],
   exports: [ProductsService],
 })
 export class ProductsModule {}

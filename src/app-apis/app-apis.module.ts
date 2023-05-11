@@ -8,6 +8,10 @@ import { Setting, SettingSchema } from 'src/setting/schema/setting.schema';
 import { SettingModule } from 'src/setting/setting.module';
 import { SettingService } from 'src/setting/setting.service';
 import { Offer, OfferSchema } from 'src/offers/schema/offers.schema';
+import {
+  NotificationToken,
+  NotificationTokenSchema,
+} from './shcema/notificationToken.schema';
 
 @Module({
   imports: [
@@ -18,6 +22,7 @@ import { Offer, OfferSchema } from 'src/offers/schema/offers.schema';
 
       { name: Product.name, schema: ProductSchema },
       { name: Setting.name, schema: SettingSchema },
+      { name: NotificationToken.name, schema: NotificationTokenSchema },
     ]),
   ],
   controllers: [AppApisController],
