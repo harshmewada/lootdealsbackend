@@ -31,6 +31,7 @@ export class ProductsService {
   constructor(
     @InjectModel(Product.name) private product: Model<Product>,
     @InjectModel(Platform.name) private platform: Model<Platform>,
+    @InjectModel(Category.name) private category: Model<Category>,
 
     private configService: ConfigService,
     private notificationService: NotificationService, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue,
@@ -45,7 +46,7 @@ export class ProductsService {
 
   async create(createProductDto: ProductDto) {
     const platform = await this.platform.findById(createProductDto.platformId);
-    return await this.product.create({
+    const createdProduct = await this.product.create({
       ...createProductDto,
       platformName: platform.platformName,
       discount: calculateDiscount(
@@ -53,6 +54,30 @@ export class ProductsService {
         parseFloat(createProductDto.salePrice),
       ),
     });
+
+    const productCategory = await this.category.findById(
+      createdProduct.categoryId,
+    );
+    if (
+      productCategory &&
+      productCategory.isActive &&
+      productCategory.enableNotification
+    ) {
+      await this.notificationService.sendNotification({
+        title: createdProduct.productName,
+        body: 'New Super Deals Added',
+        imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
+          createdProduct.productImage
+        }`,
+        data: {
+          productName: createdProduct.productName,
+          _id: createdProduct._id.toString(),
+          type: 'Product',
+        } as any,
+      });
+    }
+
+    return createdProduct;
   }
 
   async update(createProductDto: UpdateProductDto) {
@@ -97,6 +122,8 @@ export class ProductsService {
       Condition: 'New',
       Resources: [
         'Images.Primary.Medium',
+        'Images.Primary.Large',
+
         'ItemInfo.Title',
         'Offers.Listings.Price',
       ],
@@ -109,7 +136,7 @@ export class ProductsService {
       })
       .then((data) => {
         const response = JSON.parse(data);
-        console.log('amazon response', response);
+        // console.log('amazon response', response);
 
         if (response?.Errors?.length > 0) {
           const apiError = response?.Errors?.[0]?.Message;
@@ -120,7 +147,6 @@ export class ProductsService {
           );
         }
         const item = response.ItemsResult.Items[0];
-
         const productResponse = {
           productName: item.ItemInfo.Title.DisplayValue,
           productUrl: item.DetailPageURL,
@@ -128,7 +154,7 @@ export class ProductsService {
           basePrice:
             item.Offers.Listings[0].Price.Amount +
             item.Offers.Listings[0].Price.Savings.Amount,
-          productImage: item.Images.Primary.Medium.URL,
+          productImage: item.Images.Primary.Large.URL,
           amazonProductId: productId,
         };
         return productResponse;
@@ -160,6 +186,8 @@ export class ProductsService {
           Condition: 'New',
           Resources: [
             'Images.Primary.Medium',
+            'Images.Primary.Large',
+
             'ItemInfo.Title',
             'Offers.Listings.Price',
           ],
@@ -185,7 +213,7 @@ export class ProductsService {
                   basePrice:
                     item.Offers.Listings[0].Price.Amount +
                     item.Offers.Listings[0].Price.Savings.Amount,
-                  productImage: item.Images.Primary.Medium.URL,
+                  productImage: item.Images.Primary.Large.URL,
                   amazonProductId: item.ASIN,
                 };
               });
@@ -248,7 +276,11 @@ export class ProductsService {
           imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
             el.productImage
           }`,
-          // productData: {},
+          data: {
+            productName: el.productName,
+            _id: el._id.toString(),
+            type: 'Product',
+          } as any,
         });
       }),
     );

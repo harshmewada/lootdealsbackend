@@ -18,7 +18,9 @@ export class NotificationService {
     const tokens = await (
       await this.notificationToken.find()
     ).map((el) => el.token);
-    const { title, body, imageUrl, productData } = data;
+    const { title, body, imageUrl, data: notiData } = data;
+    console.log('imageUrl', imageUrl);
+
     console.log(imageUrl);
     try {
       const send = await admin
@@ -30,9 +32,10 @@ export class NotificationService {
             imageUrl,
           },
           tokens: tokens,
+          data: notiData as any,
         })
         .then((Res) => {
-          console.log('send res', Res);
+          // console.log('send res', Res);
         })
         .catch((err) => {
           console.log('sent err', err);

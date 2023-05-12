@@ -18,5 +18,5 @@ export class NotificationPayloadDto {
 
   @IsOptional()
   @ApiPropertyOptional()
-  productData?: ProductDto;
+  data?: ProductDto;
 }

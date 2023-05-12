@@ -25,10 +25,33 @@ export class AppApisService {
     private settingService: SettingService,
   ) {}
   async getHomePage() {
-    const categories = await this.category.find({
-      isActive: true,
-      // showInHomepage: true,
-    });
+    const categories = await this.category.aggregate([
+      {
+        $match: {
+          isActive: true,
+          // showInHomepage: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'products',
+
+          localField: '_id',
+          foreignField: 'categoryId',
+          as: 'products',
+        },
+
+        // showInHomepage: true,
+      },
+      {
+        $addFields: {
+          productCount: { $size: '$products' },
+        },
+      },
+      {
+        $match: { productCount: { $gt: 0 } },
+      },
+    ]);
 
     const offers = await this.offer.find({
       isActive: true,
@@ -74,6 +97,7 @@ export class AppApisService {
         $group: {
           _id: '$category.categoryName',
           categoryName: { $first: '$category.categoryName' },
+          categoryId: { $first: '$category._id' },
 
           products: { $push: '$$ROOT' },
         },
@@ -82,6 +106,8 @@ export class AppApisService {
         $project: {
           products: { $slice: ['$products', 10] },
           categoryName: 1,
+          categoryId: 1,
+
           // "submitted": 1
         },
       },
@@ -102,9 +128,12 @@ export class AppApisService {
       // },
     ]);
 
-    console.log('productData', productData);
+    // console.log(
+    //   'productData',
+    //   categories.filter((el) => el.productCount === 0),
+    // );
     return {
-      categories,
+      categories: categories,
       offers,
       productData: productData,
     };
@@ -140,7 +169,7 @@ export class AppApisService {
   }
 
   async getProduct(id: string) {
-    return await this.product.findById(id);
+    return await this.product.findById(id).populate('platformId');
   }
 
   async getCategories() {

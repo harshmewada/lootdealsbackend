@@ -14,6 +14,7 @@ import {
   NotificationTokenSchema,
 } from 'src/app-apis/shcema/notificationToken.schema';
 import { NotificationService } from 'src/notification/notification.service';
+import { Category, CategorySchema } from 'src/category/schema/category.schema';
 
 @Module({
   imports: [
@@ -25,6 +26,8 @@ import { NotificationService } from 'src/notification/notification.service';
       { name: Product.name, schema: ProductSchema },
 
       { name: Platform.name, schema: PlatformSchema },
+      { name: Category.name, schema: CategorySchema },
+
       { name: NotificationToken.name, schema: NotificationTokenSchema },
     ]),
   ],
