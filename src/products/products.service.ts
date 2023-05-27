@@ -53,6 +53,7 @@ export class ProductsService {
         parseFloat(createProductDto.basePrice),
         parseFloat(createProductDto.salePrice),
       ),
+      categoryId: createProductDto.categoryId.split(','),
     });
 
     const productCategory = await this.category.findById(
@@ -87,6 +88,7 @@ export class ProductsService {
         parseFloat(createProductDto.basePrice),
         parseFloat(createProductDto.salePrice),
       ),
+      categoryId: createProductDto.categoryId.split(','),
     });
   }
 
@@ -112,6 +114,17 @@ export class ProductsService {
       pageQuery: Query,
       findQuery: productQuery(Query),
       populate: [{ path: 'categoryId', model: Category.name }],
+    }).then((res) => {
+      return {
+        ...res,
+        data: res.data.map((el) => {
+          return {
+            ...el._doc,
+            categoryId: el.categoryId.map((ct) => ct._id),
+            categoryName: el.categoryId.map((ct) => ct.categoryName).join(', '),
+          };
+        }),
+      };
     });
   }
 

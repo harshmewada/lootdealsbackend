@@ -18,6 +18,7 @@ import { SettingModule } from './setting/setting.module';
 import { AppApisModule } from './app-apis/app-apis.module';
 import { logger } from './middleware/logger.middleware';
 import { NotificationModule } from './notification/notification.module';
+import { DashboardreportsModule } from './dashboardreports/dashboardreports.module';
 @Module({
   imports: [
     BullModule.forRootAsync({
@@ -60,6 +61,7 @@ import { NotificationModule } from './notification/notification.module';
     SettingModule,
     AppApisModule,
     NotificationModule,
+    DashboardreportsModule,
   ],
   controllers: [AppController],
   providers: [
