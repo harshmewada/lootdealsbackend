@@ -85,6 +85,12 @@ export class ProductsController {
     return await this.ProductsService.getAmazonProduct(productId);
   }
 
+  @Post('manuallyExpire')
+  async manuallyExpire() {
+    console.log('manuallyExpire');
+    return await this.ProductsService.priceCheckManually();
+  }
+
   @Post('sendnotification')
   async sendNotification(@Body('ids') ids: string[]) {
     return await this.ProductsService.sendProductNotification(ids);

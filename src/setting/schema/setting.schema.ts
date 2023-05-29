@@ -17,6 +17,9 @@ export class Setting {
   telegramBannerLink: string;
 
   @Prop({ default: '' })
+  whatsappLink: string;
+
+  @Prop({ default: '' })
   youtubeLink: string;
 
   @Prop({ default: '' })

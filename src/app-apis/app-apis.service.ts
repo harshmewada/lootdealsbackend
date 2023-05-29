@@ -24,6 +24,121 @@ export class AppApisService {
 
     private settingService: SettingService,
   ) {}
+  // async getHomePage() {
+  //   const categories = await this.category.aggregate([
+  //     {
+  //       $match: {
+  //         isActive: true,
+  //         // showInHomepage: true,
+  //       },
+  //     },
+  //     {
+  //       $lookup: {
+  //         from: 'products',
+
+  //         localField: '_id',
+  //         foreignField: 'categoryId',
+  //         as: 'products',
+  //       },
+
+  //       // showInHomepage: true,
+  //     },
+  //     {
+  //       $addFields: {
+  //         productCount: { $size: '$products' },
+  //       },
+  //     },
+  //     {
+  //       $match: { productCount: { $gt: 0 } },
+  //     },
+  //   ]);
+
+  //   const offers = await this.offer.find({
+  //     isActive: true,
+  //     showInHomepage: true,
+  //   });
+
+  //   const productData = await this.product.aggregate([
+  //     {
+  //       $match: {
+  //         isActive: true,
+  //         isExpired: false,
+  //       },
+  //     },
+
+  //     // { $sort: { createdDate: -1 } },
+  //     {
+  //       $lookup: {
+  //         from: 'categories',
+  //         localField: 'categoryId',
+  //         foreignField: '_id',
+  //         as: 'category',
+  //       },
+  //     },
+  //     {
+  //       $lookup: {
+  //         from: 'platforms',
+  //         localField: 'platformId',
+  //         foreignField: '_id',
+  //         as: 'platformId',
+  //       },
+  //     },
+  //     {
+  //       $unwind: '$platformId',
+  //     },
+  //     {
+  //       $unwind: '$category',
+  //     },
+  //     {
+  //       $sort: { createdAt: -1 },
+  //     },
+
+  //     {
+  //       $group: {
+  //         _id: '$category.categoryName',
+  //         categoryName: { $first: '$category.categoryName' },
+  //         categoryId: { $first: '$category._id' },
+
+  //         products: { $push: '$$ROOT' },
+  //       },
+  //     },
+  //     {
+  //       $project: {
+  //         products: { $slice: ['$products', 10] },
+  //         categoryName: 1,
+  //         categoryId: 1,
+
+  //         // "submitted": 1
+  //       },
+  //     },
+  //     // {
+  //     //   $project: {
+  //     //     categoryName: '$categoryName',
+  //     //     products: '$products',
+  //     //     lastProduct: { $last: '$products._id' },
+  //     //   },
+  //     // },
+  //     // {
+  //     //   $lookup: {
+  //     //     from: 'products',
+  //     //     let: { lastId: '$lastProduct' },
+  //     //     pipeline: [{ $match: { $expr: { $gt: ['$_id', '$$lastId'] } } }],
+  //     //     as: 'nextProduct',
+  //     //   },
+  //     // },
+  //   ]);
+
+  //   // console.log(
+  //   //   'productData',
+  //   //   categories.filter((el) => el.productCount === 0),
+  //   // );
+  //   return {
+  //     categories: categories,
+  //     offers,
+  //     productData: productData,
+  //   };
+  // }
+
   async getHomePage() {
     const categories = await this.category.aggregate([
       {
@@ -52,6 +167,22 @@ export class AppApisService {
         $match: { productCount: { $gt: 0 } },
       },
     ]);
+    const lootDealCategory = await this.category.findOne({
+      categoryName: 'Loot Deals',
+    });
+
+    const lootDealsProducts = await this.product
+      .find({
+        categoryId: { $in: lootDealCategory._id },
+        isActive: true,
+        isExpired: false,
+      })
+      .populate([
+        { path: 'categoryId', model: Category.name },
+        { path: 'platformId', model: Platform.name },
+      ]);
+
+    console.log('lootDealsProducts', lootDealsProducts);
 
     const offers = await this.offer.find({
       isActive: true,
@@ -89,28 +220,44 @@ export class AppApisService {
       {
         $unwind: '$category',
       },
-      {
-        $sort: { createdAt: -1 },
-      },
 
       {
         $group: {
-          _id: '$category.categoryName',
-          categoryName: { $first: '$category.categoryName' },
-          categoryId: { $first: '$category._id' },
-
-          products: { $push: '$$ROOT' },
+          _id: '$_id',
+          productName: { $first: '$productName' },
+          productImage: { $first: '$productImage' },
+          platformName: { $first: '$platformName' },
+          categoryId: { $first: '$categoryId' },
+          platformId: { $first: '$platformId' },
+          createdAt: { $first: '$createdAt' },
+          discount: { $first: '$discount' },
+          productUrl: { $first: '$productUrl' },
+          salePrice: { $first: '$salePrice' },
+          basePrice: { $first: '$basePrice' },
+          isManyProducts: { $first: '$isManyProducts' },
         },
       },
       {
-        $project: {
-          products: { $slice: ['$products', 10] },
-          categoryName: 1,
-          categoryId: 1,
-
-          // "submitted": 1
-        },
+        $sort: { createdAt: -1 },
       },
+      // {
+      //   $group: {
+      //     _id: '$category.categoryName',
+      //     categoryName: { $first: '$category.categoryName' },
+      //     categoryId: { $first: '$category._id' },
+
+      //     products: { $push: '$$ROOT' },
+      //   },
+      // },
+      // {
+      //   $project: {
+      //     products: { $slice: ['$products', 100] },
+      //     categoryName: 1,
+      //     categoryId: 1,
+
+      //     // "submitted": 1
+      //   },
+      // },
       // {
       //   $project: {
       //     categoryName: '$categoryName',
@@ -128,12 +275,11 @@ export class AppApisService {
       // },
     ]);
 
-    // console.log(
-    //   'productData',
-    //   categories.filter((el) => el.productCount === 0),
-    // );
+    console.log('productData', productData);
     return {
       categories: categories,
+      lootDealCategory: lootDealCategory,
+      lootDeals: lootDealsProducts,
       offers,
       productData: productData,
     };

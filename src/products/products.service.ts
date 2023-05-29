@@ -193,68 +193,226 @@ export class ProductsService {
         },
         isExpired: false,
       });
+      // if (autoProducts?.length > 0) {
+      //   const requestParameters = {
+      //     ItemIds: autoProducts.map((El) => El.amazonProductId),
+      //     Condition: 'New',
+      //     Resources: [
+      //       'Images.Primary.Medium',
+      //       'Images.Primary.Large',
+
+      //       'ItemInfo.Title',
+      //       'Offers.Listings.Price',
+      //     ],
+      //   };
+
+      //   const productData = await amazonApi
+      //     .GetItems(this.amazonCreds, requestParameters)
+      //     .then((res) => {
+      //       return JSON.stringify(res);
+      //     })
+      //     .then((data) => {
+      //       const response = JSON.parse(data);
+
+      //       if (response?.Errors?.length > 0) {
+      //         throw new Error(response?.Errors);
+      //       }
+      //       if (response?.ItemsResult?.Items?.length > 0) {
+      //         return response?.ItemsResult?.Items?.map((item) => {
+      //           return {
+      //             productName: item.ItemInfo.Title.DisplayValue,
+      //             productUrl: item.DetailPageURL,
+      //             salePrice: item.Offers.Listings[0].Price.Amount,
+      //             basePrice:
+      //               item.Offers.Listings[0].Price.Amount +
+      //               item.Offers.Listings[0].Price.Savings.Amount,
+      //             productImage: item.Images.Primary.Large.URL,
+      //             amazonProductId: item.ASIN,
+      //           };
+      //         });
+      //       }
+      //     });
+
+      //   const productToRemove = autoProducts.filter((el) => {
+      //     const findReferenceProduct = productData.find(
+      //       (a) => a.amazonProductId === el.amazonProductId,
+      //     );
+
+      //     if (
+      //       findReferenceProduct &&
+      //       findReferenceProduct.salePrice > el.salePrice
+      //     ) {
+      //       return true;
+      //     }
+      //     return false;
+      //   });
+
+      //   if (productToRemove?.length > 0) {
+      //     const ids = productToRemove.map((el) => el._id);
+      //     await this.product.updateMany(
+      //       { _id: { $in: ids } },
+      //       { isExpired: true },
+      //     );
+      //   }
+      // }
+      let expireCount = 0;
       if (autoProducts?.length > 0) {
-        const requestParameters = {
-          ItemIds: autoProducts.map((El) => El.amazonProductId),
-          Condition: 'New',
-          Resources: [
-            'Images.Primary.Medium',
-            'Images.Primary.Large',
+        await Promise.all(
+          autoProducts.map(async (prod) => {
+            const requestParameters = {
+              ItemIds: [prod.amazonProductId],
+              Condition: 'New',
+              Resources: [
+                'Images.Primary.Medium',
+                'Images.Primary.Large',
 
-            'ItemInfo.Title',
-            'Offers.Listings.Price',
-          ],
-        };
+                'ItemInfo.Title',
+                'Offers.Listings.Price',
+              ],
+            };
 
-        const productData = await amazonApi
-          .GetItems(this.amazonCreds, requestParameters)
-          .then((res) => {
-            return JSON.stringify(res);
-          })
-          .then((data) => {
-            const response = JSON.parse(data);
+            const productData = await amazonApi
+              .GetItems(this.amazonCreds, requestParameters)
+              .then((res) => {
+                return JSON.stringify(res);
+              })
+              .then((data) => {
+                const response = JSON.parse(data);
 
-            if (response?.Errors?.length > 0) {
-              throw new Error(response?.Errors);
+                if (response?.Errors?.length > 0) {
+                  throw new Error(response?.Errors);
+                }
+                if (response?.ItemsResult?.Items?.length > 0) {
+                  return response?.ItemsResult?.Items?.map((item) => {
+                    return {
+                      productName: item.ItemInfo.Title.DisplayValue,
+                      productUrl: item.DetailPageURL,
+                      salePrice: item.Offers.Listings[0].Price.Amount,
+                      basePrice:
+                        item.Offers.Listings[0].Price.Amount +
+                        item.Offers.Listings[0].Price.Savings.Amount,
+                      productImage: item.Images.Primary.Large.URL,
+                      amazonProductId: item.ASIN,
+                    };
+                  });
+                }
+              })
+              .catch((err) =>
+                console.log('failed to expire ', prod.productName),
+              );
+            if (productData && productData.length > 0) {
+              const findReferenceProduct = productData.find(
+                (a) => a.amazonProductId === prod.amazonProductId,
+              );
+
+              if (
+                findReferenceProduct &&
+                findReferenceProduct.salePrice > prod.salePrice
+              ) {
+                await this.product.findOneAndUpdate(
+                  { amazonProductId: prod.amazonProductId },
+                  { isExpired: true },
+                );
+                expireCount = expireCount + 1;
+              }
             }
-            if (response?.ItemsResult?.Items?.length > 0) {
-              return response?.ItemsResult?.Items?.map((item) => {
-                return {
-                  productName: item.ItemInfo.Title.DisplayValue,
-                  productUrl: item.DetailPageURL,
-                  salePrice: 800 || item.Offers.Listings[0].Price.Amount,
-                  basePrice:
-                    item.Offers.Listings[0].Price.Amount +
-                    item.Offers.Listings[0].Price.Savings.Amount,
-                  productImage: item.Images.Primary.Large.URL,
-                  amazonProductId: item.ASIN,
-                };
-              });
-            }
-          });
 
-        const productToRemove = autoProducts.filter((el) => {
-          const findReferenceProduct = productData.find(
-            (a) => a.amazonProductId === el.amazonProductId,
-          );
-
-          if (
-            findReferenceProduct &&
-            findReferenceProduct.salePrice > el.salePrice
-          ) {
-            return true;
-          }
-          return false;
-        });
-
-        if (productToRemove?.length > 0) {
-          const ids = productToRemove.map((el) => el._id);
-          await this.product.updateMany(
-            { _id: { $in: ids } },
-            { isExpired: true },
-          );
-        }
+            // if (productToRemove?.length > 0) {
+            //   const ids = productToRemove.map((el) => el._id);
+            // await this.product.updateMany(
+            //   { _id: { $in: ids } },
+            //   { isExpired: true },
+            // );
+            // }
+          }),
+        );
       }
+    } catch (error) {
+      console.log('priceCheckForLast24hour error', error);
+    }
+  }
+
+  async priceCheckManually() {
+    try {
+      const autoProducts = await this.product.find({
+        amazonProductId: { $exists: true },
+
+        isExpired: false,
+      });
+      let expireCount = 0;
+      if (autoProducts?.length > 0) {
+        await Promise.all(
+          autoProducts.map(async (prod) => {
+            const requestParameters = {
+              ItemIds: [prod.amazonProductId],
+              Condition: 'New',
+              Resources: [
+                'Images.Primary.Medium',
+                'Images.Primary.Large',
+
+                'ItemInfo.Title',
+                'Offers.Listings.Price',
+              ],
+            };
+
+            const productData = await amazonApi
+              .GetItems(this.amazonCreds, requestParameters)
+              .then((res) => {
+                return JSON.stringify(res);
+              })
+              .then((data) => {
+                const response = JSON.parse(data);
+
+                if (response?.Errors?.length > 0) {
+                  throw new Error(response?.Errors);
+                }
+                if (response?.ItemsResult?.Items?.length > 0) {
+                  return response?.ItemsResult?.Items?.map((item) => {
+                    return {
+                      productName: item.ItemInfo.Title.DisplayValue,
+                      productUrl: item.DetailPageURL,
+                      salePrice: item.Offers.Listings[0].Price.Amount,
+                      basePrice:
+                        item.Offers.Listings[0].Price.Amount +
+                        item.Offers.Listings[0].Price.Savings.Amount,
+                      productImage: item.Images.Primary.Large.URL,
+                      amazonProductId: item.ASIN,
+                    };
+                  });
+                }
+              })
+              .catch((err) =>
+                console.log('failed to expire ', prod.productName),
+              );
+            if (productData && productData.length > 0) {
+              const findReferenceProduct = productData.find(
+                (a) => a.amazonProductId === prod.amazonProductId,
+              );
+
+              if (
+                findReferenceProduct &&
+                findReferenceProduct.salePrice > prod.salePrice
+              ) {
+                await this.product.findOneAndUpdate(
+                  { amazonProductId: prod.amazonProductId },
+                  { isExpired: true },
+                );
+                expireCount = expireCount + 1;
+              }
+            }
+
+            // if (productToRemove?.length > 0) {
+            //   const ids = productToRemove.map((el) => el._id);
+            // await this.product.updateMany(
+            //   { _id: { $in: ids } },
+            //   { isExpired: true },
+            // );
+            // }
+          }),
+        );
+      }
+      console.log('expireCount', expireCount);
+      return { message: `${expireCount} Products expired` };
     } catch (error) {
       console.log('priceCheckForLast24hour error', error);
     }
