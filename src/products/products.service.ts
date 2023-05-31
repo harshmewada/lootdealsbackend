@@ -68,7 +68,7 @@ export class ProductsService {
     if (productCategory.some((el) => el.enableNotification === true)) {
       await this.notificationService.sendNotification({
         title: `${createdProduct.discount}%off - ${createdProduct.productName}`,
-        body: 'New Super Deals Added',
+        body: 'New Loot Deal Added',
         imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
           createdProduct.productImage
         }`,
@@ -445,7 +445,7 @@ export class ProductsService {
       products.map(async (el) => {
         await this.notificationService.sendNotification({
           title: `${el.discount}%off - ${el.productName}`,
-          body: 'New Super Deals Added',
+          body: 'New Loot Deal Added',
           imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
             el.productImage
           }`,
