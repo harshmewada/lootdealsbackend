@@ -275,7 +275,7 @@ export class AppApisService {
       // },
     ]);
 
-    console.log('productData', productData);
+    // console.log('productData', productData);
     return {
       categories: categories,
       lootDealCategory: lootDealCategory,

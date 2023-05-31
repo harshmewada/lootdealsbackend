@@ -15,9 +15,8 @@ export class NotificationService {
     private notificationToken: Model<NotificationToken>,
   ) {}
   async sendNotification(data: NotificationPayloadDto) {
-    const tokens = await (
-      await this.notificationToken.find()
-    ).map((el) => el.token);
+    const tokens = await await this.notificationToken.distinct('token');
+    // .map((el) => el.token);
     const { title, body, imageUrl, data: notiData } = data;
     console.log('imageUrl', imageUrl);
 
