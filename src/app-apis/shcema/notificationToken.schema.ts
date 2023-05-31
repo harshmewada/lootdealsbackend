@@ -5,7 +5,7 @@ export type NotificationTokenDocument = HydratedDocument<NotificationToken>;
 
 @Schema({ timestamps: true })
 export class NotificationToken {
-  @Prop()
+  @Prop({ unique: true })
   token: string;
 
   @Prop()

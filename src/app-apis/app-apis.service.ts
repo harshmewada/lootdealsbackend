@@ -182,7 +182,7 @@ export class AppApisService {
         { path: 'platformId', model: Platform.name },
       ]);
 
-    console.log('lootDealsProducts', lootDealsProducts);
+    // console.log('lootDealsProducts', lootDealsProducts);
 
     const offers = await this.offer.find({
       isActive: true,
@@ -350,7 +350,7 @@ const generateProductQuery = (data: ProductQueryDto) => {
     query = {
       ...query,
 
-      productName: { $regex: productName },
+      productName: { $regex: productName, $options: 'i' },
     };
   }
 

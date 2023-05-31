@@ -56,14 +56,16 @@ export class ProductsService {
       categoryId: createProductDto.categoryId.split(','),
     });
 
-    const productCategory = await this.category.findById(
-      createdProduct.categoryId,
-    );
-    if (
-      productCategory &&
-      productCategory.isActive &&
-      productCategory.enableNotification
-    ) {
+    const productCategory = await this.category.find({
+      _id: { $in: createdProduct.categoryId },
+      isActive: true,
+    });
+    // console.log(
+    //   'productCategory',
+    //   productCategory,
+    //   productCategory.some((el) => el.enableNotification === true),
+    // );
+    if (productCategory.some((el) => el.enableNotification === true)) {
       await this.notificationService.sendNotification({
         title: `${createdProduct.discount}%off - ${createdProduct.productName}`,
         body: 'New Super Deals Added',
@@ -437,7 +439,7 @@ export class ProductsService {
     const products = await this.product.find({
       _id: { $in: newIds },
     });
-    console.log('products', products);
+    console.log('products', products.length);
 
     await Promise.all(
       products.map(async (el) => {

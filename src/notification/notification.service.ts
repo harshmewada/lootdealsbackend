@@ -35,7 +35,7 @@ export class NotificationService {
           data: notiData as any,
         })
         .then((Res) => {
-          // console.log('send res', Res);
+          console.log('send res', Res);
         })
         .catch((err) => {
           console.log('sent err', err);

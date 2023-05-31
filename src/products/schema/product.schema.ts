@@ -63,4 +63,4 @@ export class Product {
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
-ProductSchema.index({ productName: 'text' }, { unique: true });
+ProductSchema.index({ productName: 1 }, { unique: true });

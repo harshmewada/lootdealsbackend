@@ -8,7 +8,7 @@ export const mimeTypes = {
   json: 'application/json',
   zip: 'application/zip',
   all: 'application/*',
-  images: /image\/png|image\/jpeg|imagesvg\+xml|image\/gif|image\/svg\+xml/,
+  images: /image\/png|image\/jpeg|imagesvg\+xml|image\/gif|image\/webp/,
   txt: 'text/plain',
 };
 
