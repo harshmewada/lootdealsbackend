@@ -19,6 +19,7 @@ import { AppApisModule } from './app-apis/app-apis.module';
 import { logger } from './middleware/logger.middleware';
 import { NotificationModule } from './notification/notification.module';
 import { DashboardreportsModule } from './dashboardreports/dashboardreports.module';
+import { AppErrorModule } from './app-error/app-error.module';
 @Module({
   imports: [
     BullModule.forRootAsync({
@@ -62,6 +63,7 @@ import { DashboardreportsModule } from './dashboardreports/dashboardreports.modu
     AppApisModule,
     NotificationModule,
     DashboardreportsModule,
+    AppErrorModule,
   ],
   controllers: [AppController],
   providers: [

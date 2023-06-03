@@ -12,6 +12,8 @@ import {
   NotificationToken,
   NotificationTokenSchema,
 } from './shcema/notificationToken.schema';
+import { AppErrorService } from 'src/app-error/app-error.service';
+import { AppError, AppErrorSchema } from 'src/app-error/schema/apperror.schema';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import {
     MongooseModule.forFeature([
       { name: Category.name, schema: CategorySchema },
       { name: Offer.name, schema: OfferSchema },
+      { name: AppError.name, schema: AppErrorSchema },
 
       { name: Product.name, schema: ProductSchema },
       { name: Setting.name, schema: SettingSchema },
@@ -26,6 +29,6 @@ import {
     ]),
   ],
   controllers: [AppApisController],
-  providers: [AppApisService, SettingService],
+  providers: [AppApisService, SettingService, AppErrorService],
 })
 export class AppApisModule {}

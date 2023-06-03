@@ -2,11 +2,16 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Public } from 'src/auth/auth.decorator';
 import { ProductQueryDto } from 'src/products/dto/product.dto';
 import { AppApisService } from './app-apis.service';
+import { AppErrorService } from 'src/app-error/app-error.service';
+import { AppErrorDto } from 'src/app-error/dto/apperror.dto';
 
 @Controller('app')
 @Public()
 export class AppApisController {
-  constructor(private readonly appApisService: AppApisService) {}
+  constructor(
+    private readonly appApisService: AppApisService,
+    private readonly appErrorService: AppErrorService,
+  ) {}
 
   @Get('home')
   async homePage() {
@@ -22,7 +27,6 @@ export class AppApisController {
 
   @Get('product')
   async product(@Query('id') id: string) {
-    console.log('product req', id);
     return this.appApisService.getProduct(id);
   }
 
@@ -44,6 +48,11 @@ export class AppApisController {
   @Get('offers')
   async getOffers() {
     return this.appApisService.getOffers();
+  }
+
+  @Post('app-error')
+  async saveAppError(@Body() data: AppErrorDto) {
+    return this.appErrorService.storeError(data);
   }
 
   @Post('registernotificationtoken')
