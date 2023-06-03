@@ -180,7 +180,8 @@ export class AppApisService {
       .populate([
         { path: 'categoryId', model: Category.name },
         { path: 'platformId', model: Platform.name },
-      ]);
+      ])
+      .sort({ createdAt: -1 });
 
     // console.log('lootDealsProducts', lootDealsProducts);
 
