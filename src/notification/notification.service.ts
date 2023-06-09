@@ -42,11 +42,11 @@ export class NotificationService {
           })
           .then((Res) => {
             // console.log('send res', Res);
-            Res.responses.map((el) => {
-              if (el.error) {
-                console.log('notification err', el.error);
-              }
-            });
+            // Res.responses.map((el) => {
+            //   if (el.error) {
+            //     console.log('notification err', el.error);
+            //   }
+            // });
           })
           .catch((err) => {
             console.log('sent err', err);
