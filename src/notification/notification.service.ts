@@ -14,33 +14,42 @@ export class NotificationService {
     @InjectModel(NotificationToken.name)
     private notificationToken: Model<NotificationToken>,
   ) {}
+
   async sendNotification(data: NotificationPayloadDto) {
-    const tokens = await await this.notificationToken.distinct('token');
-    // .map((el) => el.token);
+    const tokens = await this.notificationToken.distinct('token');
+
+    const max = 500;
+
+    const empties = new Array(Math.ceil(tokens.length / max));
+
+    const dividedArrs = empties.fill('_').map((i) => tokens.splice(0, max));
+
     const { title, body, imageUrl, data: notiData } = data;
     console.log('imageUrl', imageUrl);
 
-    console.log(imageUrl);
-    try {
-      const send = await admin
-        .messaging()
-        .sendEachForMulticast({
-          notification: {
-            title,
-            body,
-            imageUrl,
-          },
-          tokens: tokens,
-          data: notiData as any,
-        })
-        .then((Res) => {
-          console.log('send res', Res);
-        })
-        .catch((err) => {
-          console.log('sent err', err);
-        });
-    } catch (error) {
-      console.log('notification send error', error);
+    for (const arr of dividedArrs) {
+      try {
+        const send = await admin
+          .messaging()
+          .sendEachForMulticast({
+            notification: {
+              title,
+              body,
+              imageUrl,
+            },
+            tokens: arr,
+            data: notiData as any,
+          })
+          .then((Res) => {
+            console.log('send res', Res);
+          })
+          .catch((err) => {
+            console.log('sent err', err);
+          });
+      } catch (error) {
+        console.log('notification send error', error);
+      }
     }
+    // .map((el) => el.token);
   }
 }
