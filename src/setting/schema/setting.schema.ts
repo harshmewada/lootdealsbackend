@@ -30,6 +30,15 @@ export class Setting {
 
   @Prop({ default: true })
   showTelegramBanner: boolean;
+
+  @Prop({ default: false })
+  showTracking: boolean;
+
+  @Prop({ default: '' })
+  trackingBannerImage: string;
+
+  @Prop({ default: '' })
+  trackingInstructions: string;
 }
 
 export const SettingSchema = SchemaFactory.createForClass(Setting);

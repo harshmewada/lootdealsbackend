@@ -38,4 +38,16 @@ export class SettingDto {
   @IsOptional()
   @ApiPropertyOptional()
   showTelegramBanner: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  showTracking: boolean;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  trackingBannerImage?: string;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  trackingInstructions?: string;
 }

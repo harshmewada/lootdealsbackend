@@ -4,6 +4,7 @@ import { ProductQueryDto } from 'src/products/dto/product.dto';
 import { AppApisService } from './app-apis.service';
 import { AppErrorService } from 'src/app-error/app-error.service';
 import { AppErrorDto } from 'src/app-error/dto/apperror.dto';
+import { PaginationQueryDto } from 'src/commondto';
 
 @Controller('app')
 @Public()
@@ -15,8 +16,17 @@ export class AppApisController {
 
   @Get('home')
   async homePage() {
-    console.log('home req');
     return this.appApisService.getHomePage();
+  }
+  @Get('home2')
+  async homePage2() {
+    return this.appApisService.getHomePageV2();
+  }
+  @Get('home/allproducts')
+  async allProducts(@Query() query: PaginationQueryDto) {
+    console.log('allproducts', query);
+    // query.pageSize = JSON.stringify(query.limit);
+    return this.appApisService.getAllProducts(query);
   }
 
   @Get('setting')
@@ -32,6 +42,7 @@ export class AppApisController {
 
   @Get('products')
   async getProducts(@Query() query: ProductQueryDto) {
+    console.log('product query', query);
     return this.appApisService.getProducts(query);
   }
 

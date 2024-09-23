@@ -41,12 +41,12 @@ export class NotificationService {
             data: notiData as any,
           })
           .then((Res) => {
-            // console.log('send res', Res);
-            // Res.responses.map((el) => {
-            //   if (el.error) {
-            //     console.log('notification err', el.error);
-            //   }
-            // });
+            console.log('send res', Res);
+            Res.responses.map((el) => {
+              if (el.error) {
+                console.log('notification err', el.error);
+              }
+            });
           })
           .catch((err) => {
             console.log('sent err', err);

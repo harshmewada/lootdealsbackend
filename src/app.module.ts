@@ -20,6 +20,11 @@ import { logger } from './middleware/logger.middleware';
 import { NotificationModule } from './notification/notification.module';
 import { DashboardreportsModule } from './dashboardreports/dashboardreports.module';
 import { AppErrorModule } from './app-error/app-error.module';
+import { Product, ProductSchema } from './products/schema/product.schema';
+import { Category, CategorySchema } from './category/schema/category.schema';
+import { Platform, PlatformSchema } from './platforms/schema/platforms.schema';
+import { Setting, SettingSchema } from './setting/schema/setting.schema';
+import { Offer, OfferSchema } from './offers/schema/offers.schema';
 @Module({
   imports: [
     BullModule.forRootAsync({
@@ -52,6 +57,15 @@ import { AppErrorModule } from './app-error/app-error.module';
 
       inject: [ConfigService],
     }),
+
+    MongooseModule.forFeature([
+      { name: Product.name, schema: ProductSchema },
+      { name: Category.name, schema: CategorySchema },
+      { name: Offer.name, schema: OfferSchema },
+
+      { name: Platform.name, schema: PlatformSchema },
+      { name: Setting.name, schema: SettingSchema },
+    ]),
     AdminsModule,
     AuthModule,
     PlatformsModule,
