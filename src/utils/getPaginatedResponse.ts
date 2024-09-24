@@ -1,18 +1,32 @@
 import { ModelDefinition } from '@nestjs/mongoose';
-import { Model, ObjectId } from 'mongoose';
+import {
+  HydratedDocument,
+  Model,
+  ObjectId,
+  PipelineStage,
+  ProjectionFields,
+} from 'mongoose';
 import { PaginationQueryDto } from 'src/commondto';
-
+class NextPrevQuery {
+  _id?: { [key: string]: string };
+}
+interface Select {
+  [_id: string]: number;
+}
 interface Populate {
   path: string;
   model: string;
+  select?: Select;
   populate?: Populate[];
 }
 
-interface RequestQuery<T, B> {
+class RequestQuery<T, B, C> {
   model: Model<T>;
-  findQuery?: B;
+  pipeLines?: PipelineStage[];
+  findQuery: B & NextPrevQuery;
   pageQuery: PaginationQueryDto;
   populate?: Populate[];
+  project?: ProjectionFields<C>;
 }
 
 export const getCursorPaginatedResult = async (
@@ -153,12 +167,12 @@ const generator = (query: any, rawQuery: any) => {
   return result;
 };
 
-export const getPaginatedResponse = async <Type, QueryType>({
+export const getPaginatedResponse = async <Type, QueryType, C>({
   model,
   pageQuery,
   findQuery,
   populate = [],
-}: RequestQuery<Type, QueryType>) => {
+}: RequestQuery<Type, QueryType, C>) => {
   //   console.log('getPaginatedResponse', model, pageQuery, populate, findQuery);
   const pageSize = pageQuery.pageSize ? parseInt(pageQuery.pageSize) : 10;
   let returnData = {
@@ -180,6 +194,138 @@ export const getPaginatedResponse = async <Type, QueryType>({
 
   //   console.log('count', returnData.data.length, pageQuery.page, pageSize);
   returnData.totalCount = await model.countDocuments();
+
+  return returnData;
+};
+export const getAggregatePaginatedResponse = async <Type, QueryType, Prokect>({
+  model,
+  pageQuery,
+  findQuery,
+  pipeLines,
+  populate = [],
+  project,
+}: RequestQuery<Type, QueryType, Prokect>) => {
+  const pageSize = pageQuery.pageSize ? Number(pageQuery.pageSize) : 10;
+  let returnData = {
+    data: [] as Omit<HydratedDocument<Type, {}, {}>, never>[],
+    hasNext: false,
+    hasPrevious: false,
+    page: pageQuery.page,
+    pageSize: pageSize,
+    totalCount: 0,
+    next: null as NonNullable<HydratedDocument<Type, {}, {}>['_id']> | null,
+    previous: null as NonNullable<HydratedDocument<Type, {}, {}>['_id']> | null,
+  };
+
+  // Handle pagination based on paginate property and page/next/previous
+  if (pageQuery.paginate && !JSON.parse(pageQuery.paginate)) {
+    // console.log('pipeLines', pipeLines);
+    // Standard Mongoose pagination
+    returnData.data = await model.aggregate([
+      { $match: findQuery },
+      ...(pipeLines ? pipeLines : []),
+    ]);
+    returnData.totalCount = returnData.data.length;
+  } else {
+    // Pagination with aggregation pipeline
+    let aggregationPipeline: PipelineStage[] = []; // Replace with your aggregation pipeline stages
+
+    // Add filtering stage based on findQuery
+    aggregationPipeline.push({ $match: findQuery });
+
+    // Sorting based on createdAt (optional, adjust as needed)
+    aggregationPipeline.push({ $sort: { createdAt: -1 } });
+
+    if (pipeLines) {
+      aggregationPipeline = aggregationPipeline.concat(pipeLines);
+    }
+    if (project) {
+      aggregationPipeline = aggregationPipeline.concat([{ $project: project }]);
+    }
+
+    if (pageQuery.page) {
+      aggregationPipeline = aggregationPipeline.concat([
+        {
+          $facet: {
+            metadata: [{ $count: 'totalCount' }],
+            data: [
+              { $skip: (pageQuery.page - 1) * pageSize },
+              { $limit: pageSize },
+            ],
+          },
+        },
+      ]);
+    } else if (pageQuery.next || pageQuery.previous) {
+      let nextId: any, previousId: any;
+
+      if (pageQuery.next) {
+        nextId = await model
+          .findOne({ _id: pageQuery.next })
+          .select({ _id: 1 });
+      }
+
+      if (pageQuery.previous) {
+        previousId = await model
+          .findOne({ _id: pageQuery.previous })
+          .select({ _id: 1 });
+      }
+      console.log('nextId', nextId);
+
+      if (nextId) {
+        aggregationPipeline = aggregationPipeline.concat([
+          { $match: { _id: { $lt: nextId._id } } },
+          {
+            $facet: {
+              metadata: [{ $count: 'totalCount' }],
+              data: [{ $limit: pageSize }],
+            },
+          },
+        ]);
+      } else if (previousId) {
+        aggregationPipeline = aggregationPipeline.concat([
+          { $match: { _id: { $gt: previousId._id } } },
+          {
+            $facet: {
+              metadata: [{ $count: 'totalCount' }],
+              data: [{ $limit: pageSize }],
+            },
+          },
+        ]);
+      }
+    }
+
+    // Execute aggregation with pagination
+    const dataFacet = await model.aggregate(aggregationPipeline);
+
+    returnData.data = dataFacet[0]?.data || []; // Access data from facet
+    returnData.totalCount = dataFacet[0]?.metadata[0]?.totalCount || 0; // Access count from facet
+
+    // Calculate next and previous based on last element and total count
+    if (dataFacet.length > 0 && dataFacet[0].data.length > 0) {
+      const lastElementId =
+        dataFacet[0].data[dataFacet[0].data.length - 1]?._id;
+
+      if (lastElementId) {
+        const nextElement = await model.findOne({
+          _id: { $lt: lastElementId },
+        });
+
+        const next = nextElement?._id;
+
+        if (next) {
+          returnData.hasNext = true;
+          returnData.next = lastElementId;
+        }
+      }
+
+      const previous = dataFacet[0].data[0]?._id;
+
+      if (pageQuery.next && previous) {
+        returnData.hasPrevious = true;
+        returnData.previous = previous;
+      }
+    }
+  }
 
   return returnData;
 };

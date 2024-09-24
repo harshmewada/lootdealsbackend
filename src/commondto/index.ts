@@ -7,7 +7,10 @@ export class _IdDto {
 }
 
 export class PaginationQueryDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ default: 'true' })
+  paginate?: string = 'true';
+
+  @ApiPropertyOptional({ default: 1 })
   page?: number;
 
   @ApiPropertyOptional({ default: 10 })

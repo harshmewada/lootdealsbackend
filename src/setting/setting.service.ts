@@ -9,6 +9,7 @@ export class SettingService {
   constructor(@InjectModel(Setting.name) private setting: Model<Setting>) {}
 
   async update(data: SettingDto) {
+    console.log('setting data', data);
     const checkSetting = await this.setting.findOne();
     if (!checkSetting) {
       return await this.setting.create(data);

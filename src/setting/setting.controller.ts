@@ -4,9 +4,14 @@ import {
   Get,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 import { ApiConsumes } from '@nestjs/swagger';
 import { getFilePath, mimeTypes } from 'src/utils/fileOptions';
 import { multerOptions } from 'src/utils/multerOptions';
@@ -20,17 +25,29 @@ export class SettingController {
   @Post()
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FileInterceptor('telegramBannerImage', multerOptions(mimeTypes.images)),
+    FileFieldsInterceptor(
+      [
+        { name: 'telegramBannerImage', maxCount: 1 },
+        { name: 'trackingBannerImage', maxCount: 1 },
+      ],
+      multerOptions(mimeTypes.images),
+    ),
   )
   async update(
     @Body() data: SettingDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles()
+    files: {
+      telegramBannerImage?: Express.Multer.File[];
+      trackingBannerImage?: Express.Multer.File[];
+    },
   ) {
-    console.log('update', data, file);
     return await this.settingService.update({
       ...data,
-      ...(file && {
-        telegramBannerImage: getFilePath(file),
+      ...(files.telegramBannerImage && {
+        telegramBannerImage: getFilePath(files.telegramBannerImage[0]),
+      }),
+      ...(files.trackingBannerImage && {
+        trackingBannerImage: getFilePath(files.trackingBannerImage[0]),
       }),
     });
   }

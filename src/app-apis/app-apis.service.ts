@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, PipelineStage } from 'mongoose';
 import { Category } from 'src/category/schema/category.schema';
 import { Offer } from 'src/offers/schema/offers.schema';
 import { Platform } from 'src/platforms/schema/platforms.schema';
@@ -8,10 +8,12 @@ import { ProductQueryDto } from 'src/products/dto/product.dto';
 import { Product } from 'src/products/schema/product.schema';
 import { SettingService } from 'src/setting/setting.service';
 import {
+  getAggregatePaginatedResponse,
   getCursorPaginatedResult,
   getPagination,
 } from 'src/utils/getPaginatedResponse';
 import { NotificationToken } from './shcema/notificationToken.schema';
+import { PaginationQueryDto } from 'src/commondto';
 
 @Injectable()
 export class AppApisService {
@@ -277,6 +279,7 @@ export class AppApisService {
     ]);
 
     // console.log('productData', productData);
+
     return {
       categories: categories,
       lootDealCategory: lootDealCategory,
@@ -284,6 +287,128 @@ export class AppApisService {
       offers,
       productData: productData,
     };
+  }
+  async getHomePageV2() {
+    const categories = await this.category.aggregate([
+      {
+        $match: {
+          isActive: true,
+          // showInHomepage: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'products',
+
+          localField: '_id',
+          foreignField: 'categoryId',
+          as: 'products',
+        },
+
+        // showInHomepage: true,
+      },
+      {
+        $addFields: {
+          productCount: { $size: '$products' },
+        },
+      },
+      {
+        $match: { productCount: { $gt: 0 } },
+      },
+    ]);
+    const lootDealCategory = await this.category.findOne({
+      categoryName: 'Loot Deals',
+    });
+
+    const lootDealsProducts = await this.product
+      .find({
+        categoryId: { $in: lootDealCategory._id },
+        isActive: true,
+        isExpired: false,
+      })
+      .populate([
+        { path: 'categoryId', model: Category.name },
+        { path: 'platformId', model: Platform.name },
+      ])
+      .sort({ createdAt: -1 });
+
+    // console.log('lootDealsProducts', lootDealsProducts);
+
+    const offers = await this.offer.find({
+      isActive: true,
+      showInHomepage: true,
+    });
+
+    // console.log('productData', productData);
+    const productData = await this.getAllProducts({ page: 1, pageSize: '30' });
+    // console.log('prodduct data', productData);
+    return {
+      categories: categories,
+      lootDealCategory: lootDealCategory,
+      lootDeals: lootDealsProducts,
+      offers,
+      productData: productData,
+    };
+  }
+  async getAllProducts(query?: PaginationQueryDto) {
+    const pipeLine: PipelineStage[] = [
+      {
+        $match: {
+          isActive: true,
+          isExpired: false,
+        },
+      },
+
+      // { $sort: { createdDate: -1 } },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'categoryId',
+          foreignField: '_id',
+          as: 'category',
+        },
+      },
+      {
+        $lookup: {
+          from: 'platforms',
+          localField: 'platformId',
+          foreignField: '_id',
+          as: 'platformId',
+        },
+      },
+      {
+        $unwind: '$platformId',
+      },
+      {
+        $unwind: '$category',
+      },
+
+      {
+        $group: {
+          _id: '$_id',
+          productName: { $first: '$productName' },
+          productImage: { $first: '$productImage' },
+          platformName: { $first: '$platformName' },
+          categoryId: { $first: '$categoryId' },
+          platformId: { $first: '$platformId' },
+          createdAt: { $first: '$createdAt' },
+          discount: { $first: '$discount' },
+          productUrl: { $first: '$productUrl' },
+          salePrice: { $first: '$salePrice' },
+          basePrice: { $first: '$basePrice' },
+          isManyProducts: { $first: '$isManyProducts' },
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+    ];
+    return await getAggregatePaginatedResponse({
+      model: this.product,
+      findQuery: {},
+      pipeLines: pipeLine,
+      pageQuery: query,
+    });
   }
 
   async settingData() {
