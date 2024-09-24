@@ -67,3 +67,11 @@ export class CategoryQueryDto extends IntersectionType(
   PaginationQueryDto,
   PickType(UpdateCategoryDto, ['categoryName'] as const),
 ) {}
+
+export class CateGoryTrackingDto {
+  @ApiProperty()
+  notificationToken: string;
+
+  @ApiProperty()
+  categories: string[];
+}

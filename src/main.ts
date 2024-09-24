@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './exception-filters/http-exception.filter';
 import { AppClusterService } from './app-cluster.service';
 async function bootstrap() {
@@ -26,6 +26,16 @@ async function bootstrap() {
   app.enableShutdownHooks();
   // app.setGlobalPrefix('api');
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  // Set log levels in production
+  if (isProduction) {
+    Logger.log('Running in production mode');
+    app.useLogger(['error', 'warn']); // Only log errors and warnings in production
+  } else {
+    app.useLogger(['log', 'error', 'warn', 'debug', 'verbose']); // Full logs in non-production
+  }
   await app.listen(3000);
 }
 AppClusterService.clusterize(bootstrap);

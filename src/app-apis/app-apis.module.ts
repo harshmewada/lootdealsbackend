@@ -14,21 +14,45 @@ import {
 } from './shcema/notificationToken.schema';
 import { AppErrorService } from 'src/app-error/app-error.service';
 import { AppError, AppErrorSchema } from 'src/app-error/schema/apperror.schema';
+import { ProductTrackingService } from 'src/product-tracking/product-tracking.service';
+import {
+  AmazonTracking,
+  AmazonTrackingSchema,
+} from 'src/product-tracking/schema/amazon-tracking.schema';
+import { ProductsService } from 'src/products/products.service';
+import {
+  Platform,
+  PlatformSchema,
+} from 'src/platforms/schema/platforms.schema';
+import { ConfigModule } from '@nestjs/config';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Module({
   imports: [
     SettingModule,
+    ConfigModule,
+
     MongooseModule.forFeature([
       { name: Category.name, schema: CategorySchema },
       { name: Offer.name, schema: OfferSchema },
       { name: AppError.name, schema: AppErrorSchema },
 
       { name: Product.name, schema: ProductSchema },
+      { name: Platform.name, schema: PlatformSchema },
+
       { name: Setting.name, schema: SettingSchema },
       { name: NotificationToken.name, schema: NotificationTokenSchema },
+      { name: AmazonTracking.name, schema: AmazonTrackingSchema },
     ]),
   ],
   controllers: [AppApisController],
-  providers: [AppApisService, SettingService, AppErrorService],
+  providers: [
+    AppApisService,
+    SettingService,
+    AppErrorService,
+    ProductTrackingService,
+    ProductsService,
+    NotificationService,
+  ],
 })
 export class AppApisModule {}

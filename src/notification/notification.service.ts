@@ -4,6 +4,10 @@ import admin from 'firebase-admin';
 import { Model } from 'mongoose';
 import { NotificationToken } from 'src/app-apis/shcema/notificationToken.schema';
 import { NotificationPayloadDto } from './dto/notification.dto';
+import { AmazonTracking } from 'src/product-tracking/schema/amazon-tracking.schema';
+import { ProductDocument } from 'src/products/schema/product.schema';
+import { AgendaService } from '@agent-ly/nestjs-agenda';
+import { NOTIFICATIONACTIONS } from 'src/constants';
 const serviceAccount = require('../../config/firebase.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -13,6 +17,11 @@ export class NotificationService {
   constructor(
     @InjectModel(NotificationToken.name)
     private notificationToken: Model<NotificationToken>,
+
+    @InjectModel(AmazonTracking.name)
+    private amazonTracking: Model<AmazonTracking>,
+
+    private readonly agendaService: AgendaService,
   ) {}
 
   async sendNotification(data: NotificationPayloadDto) {
@@ -56,5 +65,74 @@ export class NotificationService {
       }
     }
     // .map((el) => el.token);
+  }
+
+  async sendSelectedCategoryNotifications(
+    categoryIds: string[],
+    product: ProductDocument,
+  ) {
+    // console.log('categoryIds', categoryIds, product);
+    const findCategoryTokens = await this.amazonTracking.aggregate([
+      { $unwind: '$categories' },
+
+      {
+        $addFields: {
+          categoryId: { $toString: '$categories' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          let: {
+            debuggercategoryId: '$categoryId',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', { $toObjectId: '$$debuggercategoryId' }],
+                },
+              },
+            },
+          ],
+          as: 'category',
+        },
+      },
+      { $unwind: '$category' },
+      {
+        $match: {
+          $expr: { $in: ['$categoryId', categoryIds] },
+        },
+      },
+      {
+        $group: {
+          _id: '',
+          categories: {
+            $addToSet: {
+              categoryId: '$categoryId',
+              categoryName: '$category.categoryName',
+            },
+          },
+          tokens: { $addToSet: '$notificationToken' },
+        },
+      },
+    ]);
+    const data = findCategoryTokens[0].tokens;
+    if (data)
+      // await this.sendCategoryNotification
+      // console.log('findCategoryTokens', findCategoryTokens);
+      this.agendaService.now(
+        NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES,
+        { tokens: data, product },
+      );
+  }
+
+  async intervalProductTrackingData() {
+    const productData = await this.amazonTracking.aggregate([
+      { $match: { $expr: { $gt: [{ $size: '$products' }, 0] } } },
+    ]);
+    productData.forEach((e) =>
+      this.agendaService.now(NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE, e),
+    );
   }
 }

@@ -20,3 +20,15 @@ export class NotificationPayloadDto {
   @ApiPropertyOptional()
   data?: ProductDto;
 }
+
+export class ISendNotificationPayload {
+  tokens: string[];
+
+  title: string;
+
+  body: string;
+
+  imageUrl: string;
+
+  data?: ProductDto;
+}

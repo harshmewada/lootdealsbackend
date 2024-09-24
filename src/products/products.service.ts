@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -11,18 +12,19 @@ import { Platform } from 'src/platforms/schema/platforms.schema';
 import { getPaginatedResponse } from 'src/utils/getPaginatedResponse';
 import { removeFileSync } from 'src/utils/removeFileSync';
 import {
+  IAmazonProduct,
   ProductDto,
   ProductQueryDto,
   UpdateProductDto,
 } from './dto/product.dto';
-import { Product } from './schema/product.schema';
+import { AmazonProduct, Product } from './schema/product.schema';
 import moment from 'moment';
-import { Job, Queue } from 'bull';
-import { InjectQueue } from '@nestjs/bull';
 import { calculateDiscount } from 'src/utils/calculateDiscount';
 import { Category } from 'src/category/schema/category.schema';
-import { NotificationToken } from 'src/app-apis/shcema/notificationToken.schema';
 import { NotificationService } from 'src/notification/notification.service';
+import { AmazonTrackingDocument } from 'src/product-tracking/schema/amazon-tracking.schema';
+import { AgendaService } from '@agent-ly/nestjs-agenda';
+import { NOTIFICATIONACTIONS } from 'src/constants';
 
 const amazonApi = require('amazon-paapi');
 
@@ -34,7 +36,8 @@ export class ProductsService {
     @InjectModel(Category.name) private category: Model<Category>,
 
     private configService: ConfigService,
-    private notificationService: NotificationService, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue,
+    private notificationService: NotificationService,
+    private agendaService: AgendaService, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue,
   ) {}
   amazonCreds = {
     AccessKey: this.configService.get('AMAZON_ACCESS_KEY'),
@@ -79,7 +82,12 @@ export class ProductsService {
         } as any,
       });
     }
-
+    this.notificationService.sendSelectedCategoryNotifications(
+      createProductDto.categoryId.split(','),
+      createdProduct,
+    );
+    await this.product.findByIdAndDelete(createdProduct._id);
+    throw new BadRequestException('dd');
     return createdProduct;
   }
 
@@ -130,7 +138,7 @@ export class ProductsService {
     });
   }
 
-  async getAmazonProduct(productId: string) {
+  async getAmazonProduct(productId: string): Promise<IAmazonProduct> {
     console.log('productID', productId);
     const requestParameters = {
       ItemIds: [productId],
@@ -162,7 +170,7 @@ export class ProductsService {
           );
         }
         const item = response.ItemsResult.Items[0];
-        const productResponse = {
+        const productResponse: IAmazonProduct = {
           productName: item.ItemInfo.Title.DisplayValue,
           productUrl: item.DetailPageURL,
           salePrice: item.Offers.Listings[0].Price.Amount,
@@ -184,7 +192,69 @@ export class ProductsService {
   }
 
   //runs every day
+  async checkMyProductPriceDifference(data: AmazonTrackingDocument) {
+    try {
+      const { products } = data;
+      if (products.length > 0) {
+        const requestParameters = {
+          ItemIds: products.map((e) => e.amazonProductId),
+          Condition: 'New',
+          Resources: [
+            'Images.Primary.Medium',
+            'Images.Primary.Large',
 
+            'ItemInfo.Title',
+            'Offers.Listings.Price',
+          ],
+        };
+
+        const productData = await amazonApi
+          .GetItems(this.amazonCreds, requestParameters)
+
+          .then((response) => {
+            if (response?.Errors?.length > 0) {
+              return;
+            }
+            if (response?.ItemsResult?.Items?.length > 0) {
+              const transformeProducts = response?.ItemsResult?.Items?.map(
+                (item) => transformAmazonProduct(item),
+              );
+
+              const priceDifferenceProducts = data.products.forEach((el) => {
+                const findInTransformedResponse = transformeProducts.find(
+                  (e) => e.amazonProductId === el.amazonProductId,
+                );
+
+                if (
+                  findInTransformedResponse &&
+                  findInTransformedResponse.salePrice < el.salePrice
+                ) {
+                  this.agendaService.now(
+                    NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION_TO_SINGLE_USER,
+                    {
+                      title: `Price Drop Alert - Price dropped to ${this.configService.get(
+                        'CURRENCY',
+                      )} ${findInTransformedResponse.salePrice}`,
+                      body: `${el.productName}`,
+                      imageUrl: findInTransformedResponse.productImage,
+                      data: {
+                        productName: el.productName,
+                        productUrl: el.productUrl,
+                        type: 'ProductPriceDrop',
+                      },
+                      tokens: [data.notificationToken],
+                    },
+                  );
+                }
+              });
+              // console.log('transformedProducts', transformeProducts);
+            }
+          });
+      }
+
+      return [];
+    } catch {}
+  }
   async priceCheckForLast24hour() {
     try {
       const autoProducts = await this.product.find({
@@ -425,17 +495,6 @@ export class ProductsService {
       return new Types.ObjectId(el);
     });
 
-    // const products = await this.product.aggregate([
-    //   { $match: { _id: { $in: newIds }, isActive: true } },
-    //   // {
-    //   //   $group: { _id: null, array: { $push: '$_id' } },
-    //   // },
-
-    //   // {
-    //   //   $project: { array: true, _id: false },
-    //   // },
-    // ]);
-
     const products = await this.product.find({
       _id: { $in: newIds },
     });
@@ -468,4 +527,18 @@ const productQuery = ({ productName }: ProductQueryDto) => {
       productName: { $regex: productName, $options: 'i' },
     }
   );
+};
+
+const transformAmazonProduct = (item: any) => {
+  return {
+    productName: item.ItemInfo.Title.DisplayValue,
+    productUrl: item.DetailPageURL,
+    salePrice: 120,
+    // salePrice: item.Offers.Listings[0].Price.Amount,
+    basePrice:
+      item.Offers.Listings[0].Price.Amount +
+      item.Offers.Listings[0].Price.Savings.Amount,
+    productImage: item.Images.Primary.Large.URL,
+    amazonProductId: item.ASIN,
+  };
 };
