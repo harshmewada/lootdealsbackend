@@ -56,33 +56,33 @@ export class NotificationProcessor {
   })
   sendProductNotification(job: Job<ISendNotificationPayload>) {
     const { title, body, imageUrl, tokens, data } = job.attrs.data;
+    const splitArr = splitTokensArr(job.attrs.data.tokens);
+    splitArr.forEach((e) =>
+      admin
+        .messaging()
+        .sendEachForMulticast({
+          notification: {
+            title,
+            body,
+            imageUrl,
+          },
+          tokens: e,
+          data: data as any,
+        })
+        .then((Res) => {
+          // console.log('send res', Res);
+          Res.responses.map((el) => {
+            if (el.error) {
+              // console.log('notification err', el.error);
+            }
+          });
+        })
+        .catch((err) => {
+          // console.log('sent err', err);
+        }),
+    );
+    job.remove();
 
-    // console.log('sending notification', job.attrs.data);
-    admin
-      .messaging()
-      .sendEachForMulticast({
-        notification: {
-          title,
-          body,
-          imageUrl,
-        },
-        tokens: tokens,
-        data: data as any,
-      })
-      .then((Res) => {
-        // console.log('send res', Res);
-        job.remove();
-        Res.responses.map((el) => {
-          if (el.error) {
-            // console.log('notification err', el.error);
-          }
-        });
-      })
-      .catch((err) => {
-        job.remove();
-
-        // console.log('sent err', err);
-      });
     // console.log(`Your name is `, job.attrs.data);
 
     // console.log('splitArr', splitArr);
@@ -94,22 +94,22 @@ export class NotificationProcessor {
   }
   @Define(NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES)
   async sayYourName(job: Job<SendNotificationToSubscribedCategories>) {
-    const splitArr = splitTokensArr(job.attrs.data.tokens);
-    splitArr.forEach((e) => {
-      this.agendaService.now(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION, {
-        title: 'A new product has Been added',
-        body: `${job.attrs.data.product.productName}`,
-        imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
-          job.attrs.data.product.productImage
-        }`,
-        data: {
-          productName: job.attrs.data.product.productName,
-          _id: job.attrs.data.product._id.toString(),
-          type: 'Product',
-        },
-        tokens: e,
-      });
+    // const splitArr = splitTokensArr(job.attrs.data.tokens);
+    // splitArr.forEach((e) => {
+    this.agendaService.now(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION, {
+      title: 'A new product has Been added',
+      body: `${job.attrs.data.product.productName}`,
+      imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
+        job.attrs.data.product.productImage
+      }`,
+      data: {
+        productName: job.attrs.data.product.productName,
+        _id: job.attrs.data.product._id.toString(),
+        type: 'Product',
+      },
+      tokens: job.attrs.data.tokens,
     });
+    // });
 
     await job.remove();
 

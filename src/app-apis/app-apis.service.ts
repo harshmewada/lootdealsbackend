@@ -14,6 +14,7 @@ import {
 } from 'src/utils/getPaginatedResponse';
 import { NotificationToken } from './shcema/notificationToken.schema';
 import { PaginationQueryDto } from 'src/commondto';
+import { AmazonTracking } from 'src/product-tracking/schema/amazon-tracking.schema';
 
 @Injectable()
 export class AppApisService {
@@ -23,6 +24,9 @@ export class AppApisService {
     @InjectModel(Product.name) private product: Model<Product>,
     @InjectModel(NotificationToken.name)
     private notificationToken: Model<NotificationToken>,
+
+    @InjectModel(AmazonTracking.name)
+    private amazonTracking: Model<AmazonTracking>,
 
     private settingService: SettingService,
   ) {}
@@ -421,7 +425,13 @@ export class AppApisService {
   }
 
   async registerNotificationToken(token: string) {
-    await this.notificationToken.create({ token });
+    const findOne = await this.amazonTracking.findOne({
+      notificationToken: token,
+    });
+    if (!findOne)
+      return await this.amazonTracking.create({ notificationToken: token });
+
+    return findOne;
   }
 
   async getProducts(query: ProductQueryDto) {

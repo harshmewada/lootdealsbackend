@@ -22,7 +22,10 @@ import moment from 'moment';
 import { calculateDiscount } from 'src/utils/calculateDiscount';
 import { Category } from 'src/category/schema/category.schema';
 import { NotificationService } from 'src/notification/notification.service';
-import { AmazonTrackingDocument } from 'src/product-tracking/schema/amazon-tracking.schema';
+import {
+  AmazonTracking,
+  AmazonTrackingDocument,
+} from 'src/product-tracking/schema/amazon-tracking.schema';
 import { AgendaService } from '@agent-ly/nestjs-agenda';
 import { NOTIFICATIONACTIONS } from 'src/constants';
 
@@ -34,6 +37,8 @@ export class ProductsService {
     @InjectModel(Product.name) private product: Model<Product>,
     @InjectModel(Platform.name) private platform: Model<Platform>,
     @InjectModel(Category.name) private category: Model<Category>,
+    @InjectModel(AmazonTracking.name)
+    private amazonTracking: Model<AmazonTracking>,
 
     private configService: ConfigService,
     private notificationService: NotificationService,
@@ -69,7 +74,26 @@ export class ProductsService {
     //   productCategory.some((el) => el.enableNotification === true),
     // );
     if (productCategory.some((el) => el.enableNotification === true)) {
-      await this.notificationService.sendNotification({
+      const tokens = await this.amazonTracking.aggregate([
+        {
+          $project: {
+            notificationToken: 1,
+          },
+        },
+      ]);
+      // await this.notificationService.sendNotification({
+      //   title: `${createdProduct.discount}%off - ${createdProduct.productName}`,
+      //   body: 'New Loot Deal Added',
+      //   imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
+      //     createdProduct.productImage
+      //   }`,
+      //   data: {
+      //     productName: createdProduct.productName,
+      //     _id: createdProduct._id.toString(),
+      //     type: 'Product',
+      //   } as any,
+      // });
+      this.agendaService.now(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION, {
         title: `${createdProduct.discount}%off - ${createdProduct.productName}`,
         body: 'New Loot Deal Added',
         imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
@@ -80,6 +104,7 @@ export class ProductsService {
           _id: createdProduct._id.toString(),
           type: 'Product',
         } as any,
+        tokens: tokens.map((e) => e.notificationToken),
       });
     }
     this.notificationService.sendSelectedCategoryNotifications(
@@ -499,10 +524,16 @@ export class ProductsService {
       _id: { $in: newIds },
     });
     console.log('products', products.length);
-
+    const tokens = await this.amazonTracking.aggregate([
+      {
+        $project: {
+          notificationToken: 1,
+        },
+      },
+    ]);
     await Promise.all(
       products.map(async (el) => {
-        await this.notificationService.sendNotification({
+        this.agendaService.now(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION, {
           title: `${el.discount}%off - ${el.productName}`,
           body: 'New Loot Deal Added',
           imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
@@ -513,7 +544,20 @@ export class ProductsService {
             _id: el._id.toString(),
             type: 'Product',
           } as any,
+          tokens: tokens.map((e) => e.notificationToken),
         });
+        // await this.notificationService.sendNotification({
+        // title: `${el.discount}%off - ${el.productName}`,
+        // body: 'New Loot Deal Added',
+        // imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
+        //   el.productImage
+        // }`,
+        // data: {
+        //   productName: el.productName,
+        //   _id: el._id.toString(),
+        //   type: 'Product',
+        // } as any,
+        // });
       }),
     );
     // await sendNot
