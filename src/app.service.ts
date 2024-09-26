@@ -11,11 +11,14 @@ import { Offer } from './offers/schema/offers.schema';
 import { Setting } from './setting/schema/setting.schema';
 import { AmazonTracking } from './product-tracking/schema/amazon-tracking.schema';
 import * as crypto from 'crypto';
+import { NotificationToken } from './app-apis/shcema/notificationToken.schema';
 @Injectable()
 export class AppService implements OnApplicationBootstrap {
   constructor(
     private configService: ConfigService,
     @InjectModel(Product.name) private Products: Model<Product>,
+    @InjectModel(NotificationToken.name)
+    private notificationToken: Model<NotificationToken>,
     @InjectModel(Platform.name) private Platforms: Model<Platform>,
     @InjectModel(Category.name) private Categorys: Model<Category>,
     @InjectModel(Offer.name) private Offers: Model<Offer>,
@@ -26,6 +29,8 @@ export class AppService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     // await this.generateDummyTrackingTokens();
+    await this.moveAllNotificationTokenToNewArchitecture();
+
     const listAllProducts = await this.Products.find().select('productImage');
     const listAllCategories = await this.Categorys.find().select(
       'categoryImage',
@@ -60,7 +65,14 @@ export class AppService implements OnApplicationBootstrap {
       existsSync(fpath) && unlinkSync(fpath);
     });
   }
+  async moveAllNotificationTokenToNewArchitecture() {
+    const token = await this.notificationToken.find();
 
+    await this.amazonTracking.insertMany(
+      token.map((d) => ({ notificationToken: d.token })),
+    );
+    await this.notificationToken.deleteMany({});
+  }
   async generateDummyTrackingTokens() {
     await this.amazonTracking.insertMany(
       new Array(10000).fill('_').map((e, eI) => {

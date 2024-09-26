@@ -32,6 +32,10 @@ import {
   AmazonTrackingSchema,
 } from './product-tracking/schema/amazon-tracking.schema';
 import { ProductTrackingModule } from './product-tracking/product-tracking.module';
+import {
+  NotificationToken,
+  NotificationTokenSchema,
+} from './app-apis/shcema/notificationToken.schema';
 @Module({
   imports: [
     BullModule.forRootAsync({
@@ -78,6 +82,7 @@ import { ProductTrackingModule } from './product-tracking/product-tracking.modul
       { name: Platform.name, schema: PlatformSchema },
       { name: Setting.name, schema: SettingSchema },
       { name: AmazonTracking.name, schema: AmazonTrackingSchema },
+      { name: NotificationToken.name, schema: NotificationTokenSchema },
     ]),
     AdminsModule,
     AuthModule,
