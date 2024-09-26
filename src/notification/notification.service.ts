@@ -117,14 +117,16 @@ export class NotificationService {
         },
       },
     ]);
-    const data = findCategoryTokens[0].tokens;
-    if (data)
-      // await this.sendCategoryNotification
-      // console.log('findCategoryTokens', findCategoryTokens);
-      this.agendaService.now(
-        NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES,
-        { tokens: data, product },
-      );
+    if (findCategoryTokens[0]) {
+      const data = findCategoryTokens[0].tokens;
+      if (data)
+        // await this.sendCategoryNotification
+        // console.log('findCategoryTokens', findCategoryTokens);
+        this.agendaService.now(
+          NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES,
+          { tokens: data, product },
+        );
+    }
   }
 
   async intervalProductTrackingData() {
