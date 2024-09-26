@@ -87,6 +87,9 @@ export class AmazonProduct {
   @Prop()
   amazonProductId: string;
 
+  @Prop({ default: 0 })
+  notificationsCount: number;
+
   @Prop({ default: true })
   isActive: boolean;
 }

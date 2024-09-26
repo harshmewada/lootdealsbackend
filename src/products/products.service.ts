@@ -67,13 +67,15 @@ export class ProductsService {
     const productCategory = await this.category.find({
       _id: { $in: createdProduct.categoryId },
       isActive: true,
+      enableNotification: true,
     });
+
     // console.log(
     //   'productCategory',
     //   productCategory,
-    //   productCategory.some((el) => el.enableNotification === true),
+    //   // productCategory.some((el) => el.enableNotification === true),
     // );
-    if (productCategory.some((el) => el.enableNotification === true)) {
+    if (productCategory.length > 0) {
       const tokens = await this.amazonTracking.aggregate([
         {
           $project: {
@@ -218,6 +220,7 @@ export class ProductsService {
 
   //runs every day
   async checkMyProductPriceDifference(data: AmazonTrackingDocument) {
+    // console.log('checkMyProductPriceDifference');
     try {
       const { products } = data;
       if (products.length > 0) {
@@ -245,33 +248,47 @@ export class ProductsService {
                 (item) => transformAmazonProduct(item),
               );
 
-              const priceDifferenceProducts = data.products.forEach((el) => {
-                const findInTransformedResponse = transformeProducts.find(
-                  (e) => e.amazonProductId === el.amazonProductId,
-                );
-
-                if (
-                  findInTransformedResponse &&
-                  findInTransformedResponse.salePrice < el.salePrice
-                ) {
-                  this.agendaService.now(
-                    NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION_TO_SINGLE_USER,
-                    {
-                      title: `Price Drop Alert - Price dropped to ${this.configService.get(
-                        'CURRENCY',
-                      )} ${findInTransformedResponse.salePrice}`,
-                      body: `${el.productName}`,
-                      imageUrl: findInTransformedResponse.productImage,
-                      data: {
-                        productName: el.productName,
-                        productUrl: el.productUrl,
-                        type: 'ProductPriceDrop',
-                      },
-                      tokens: [data.notificationToken],
-                    },
+              const priceDifferenceProducts = data.products.forEach(
+                async (el, elI) => {
+                  const findInTransformedResponse = transformeProducts.find(
+                    (e) => e.amazonProductId === el.amazonProductId,
                   );
-                }
-              });
+
+                  if (
+                    findInTransformedResponse &&
+                    findInTransformedResponse.salePrice < el.salePrice
+                  ) {
+                    // console.log('productData', products);
+                    const matching = await this.amazonTracking.updateMany(
+                      { 'products.amazonProductId': el.amazonProductId },
+                      {
+                        $inc: { 'products.$.notificationsCount': 1 }, // The $ operator targets the matched array element
+                      },
+                    );
+
+                    const priceDiscount = calculateDiscount(
+                      parseFloat(el.salePrice),
+                      parseFloat(findInTransformedResponse.salePrice),
+                    );
+                    this.agendaService.now(
+                      NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION_TO_SINGLE_USER,
+                      {
+                        title: `Price Drop ${priceDiscount}% 🔻 - Price dropped to  ${this.configService.get(
+                          'CURRENCY',
+                        )} ${findInTransformedResponse.salePrice}`,
+                        body: `${el.productName}`,
+                        imageUrl: findInTransformedResponse.productImage,
+                        data: {
+                          productName: el.productName,
+                          productUrl: el.productUrl,
+                          type: 'ProductPriceDrop',
+                        },
+                        tokens: [data.notificationToken],
+                      },
+                    );
+                  }
+                },
+              );
               // console.log('transformedProducts', transformeProducts);
             }
           });

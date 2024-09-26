@@ -40,7 +40,7 @@ export class NotificationProcessor {
     return this.configService.get('PRICE_DROP_CHECK_INTERVAL') || '10 minutes';
   }
   @Define('Say "Hello world!"')
-  @Every('10 minutes')
+  @Every('30 minutes')
   sayHelloWorld() {
     this.notificationService.intervalProductTrackingData();
   }
@@ -96,17 +96,28 @@ export class NotificationProcessor {
   async sayYourName(job: Job<SendNotificationToSubscribedCategories>) {
     // const splitArr = splitTokensArr(job.attrs.data.tokens);
     // splitArr.forEach((e) => {
+    const createdProduct = job.attrs.data.product;
     this.agendaService.now(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION, {
-      title: 'A new product has Been added',
-      body: `${job.attrs.data.product.productName}`,
+      // title: 'A new product has Been added',
+      // body: `${job.attrs.data.product.productName}`,
+      // imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
+      //   job.attrs.data.product.productImage
+      // }`,
+      // data: {
+      //   productName: job.attrs.data.product.productName,
+      //   _id: job.attrs.data.product._id.toString(),
+      //   type: 'Product',
+      // },
+      title: `${createdProduct.discount}%off - ${createdProduct.productName}`,
+      body: 'New Loot Deal Added',
       imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
-        job.attrs.data.product.productImage
+        createdProduct.productImage
       }`,
       data: {
-        productName: job.attrs.data.product.productName,
-        _id: job.attrs.data.product._id.toString(),
+        productName: createdProduct.productName,
+        _id: createdProduct._id.toString(),
         type: 'Product',
-      },
+      } as any,
       tokens: job.attrs.data.tokens,
     });
     // });

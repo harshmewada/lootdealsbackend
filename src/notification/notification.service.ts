@@ -132,7 +132,22 @@ export class NotificationService {
   async intervalProductTrackingData() {
     const productData = await this.amazonTracking.aggregate([
       { $match: { $expr: { $gt: [{ $size: '$products' }, 0] } } },
+      {
+        $project: {
+          products: {
+            $filter: {
+              input: '$products',
+              as: 'item',
+              cond: {
+                $lt: ['$$item.notificationsCount', 3],
+              },
+            },
+          },
+          notificationToken: 1,
+        },
+      },
     ]);
+
     productData.forEach((e) =>
       this.agendaService.now(NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE, e),
     );
