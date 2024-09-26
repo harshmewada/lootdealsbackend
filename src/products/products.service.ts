@@ -86,8 +86,8 @@ export class ProductsService {
       createProductDto.categoryId.split(','),
       createdProduct,
     );
-    await this.product.findByIdAndDelete(createdProduct._id);
-    throw new BadRequestException('dd');
+    // await this.product.findByIdAndDelete(createdProduct._id);
+    // throw new BadRequestException('dd');
     return createdProduct;
   }
 
