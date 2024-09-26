@@ -1,18 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IAmazonProduct } from 'src/products/dto/product.dto';
 
 export class AddAmazonProductToTracking {
   @ApiProperty()
   notificationToken: string;
 
   @ApiProperty()
-  productUrl: string;
+  productId: string;
 }
-export class AmazonProductToTracking {
+export class GetAmazonProductToTracking {
   @ApiProperty()
   notificationToken: string;
 
   @ApiProperty()
-  productUrl: string[];
+  products: IAmazonProduct[];
 }
 export class GetMyTrackingProducts {
   @ApiProperty()

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Post,
   Query,
@@ -33,5 +34,12 @@ export class ProductTrackingController {
   @Get('amazon-products')
   async getMyTrackingProducts(@Query() qeury: GetMyTrackingProducts) {
     return await this.productTrackingService.getMyTrackingProducts(qeury);
+  }
+
+  @Delete('amazon-product')
+  async removeProductToTracking(@Body() data: AddAmazonProductToTracking) {
+    return await this.productTrackingService.removeAmazonProductToTracking({
+      ...data,
+    });
   }
 }

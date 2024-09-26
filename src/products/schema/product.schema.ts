@@ -64,3 +64,31 @@ export class Product {
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
 ProductSchema.index({ productName: 1 }, { unique: true });
+
+export type AmazonProductDocument = mongoose.HydratedDocument<AmazonProduct>;
+
+@Schema({ timestamps: true })
+export class AmazonProduct {
+  @Prop()
+  productName: string;
+
+  @Prop()
+  productImage: string;
+
+  @Prop()
+  productUrl: string;
+
+  @Prop()
+  basePrice: string;
+
+  @Prop()
+  salePrice: string;
+
+  @Prop()
+  amazonProductId: string;
+
+  @Prop({ default: true })
+  isActive: boolean;
+}
+
+export const AmazonProductSchema = SchemaFactory.createForClass(AmazonProduct);

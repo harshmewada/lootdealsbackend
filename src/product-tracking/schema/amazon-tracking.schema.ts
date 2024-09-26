@@ -1,7 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { Category } from 'src/category/schema/category.schema';
-import { Product } from 'src/products/schema/product.schema';
+import {
+  AmazonProduct,
+  AmazonProductSchema,
+  Product,
+} from 'src/products/schema/product.schema';
 export type AmazonTrackingDocument = HydratedDocument<AmazonTracking>;
 
 @Schema({ timestamps: true })
@@ -11,11 +15,10 @@ export class AmazonTracking {
 
   @Prop([
     {
-      required: false,
-      type: String,
+      type: AmazonProductSchema,
     },
   ])
-  products: string;
+  products: AmazonProduct[];
 
   @Prop([
     {

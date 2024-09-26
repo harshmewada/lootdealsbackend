@@ -140,3 +140,12 @@ export class ProductQueryDto extends IntersectionType(
   PaginationQueryDto,
   PartialType(UpdateProductDto),
 ) {}
+
+export interface IAmazonProduct {
+  productName: string;
+  productUrl: string;
+  salePrice: string;
+  basePrice: string;
+  productImage: string;
+  amazonProductId: string;
+}

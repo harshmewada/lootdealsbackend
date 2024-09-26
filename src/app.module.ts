@@ -25,6 +25,13 @@ import { Category, CategorySchema } from './category/schema/category.schema';
 import { Platform, PlatformSchema } from './platforms/schema/platforms.schema';
 import { Setting, SettingSchema } from './setting/schema/setting.schema';
 import { Offer, OfferSchema } from './offers/schema/offers.schema';
+import { AgendaModule } from '@agent-ly/nestjs-agenda';
+import { NotificationProcessor } from './notification/notification.processor';
+import {
+  AmazonTracking,
+  AmazonTrackingSchema,
+} from './product-tracking/schema/amazon-tracking.schema';
+import { ProductTrackingModule } from './product-tracking/product-tracking.module';
 @Module({
   imports: [
     BullModule.forRootAsync({
@@ -57,6 +64,11 @@ import { Offer, OfferSchema } from './offers/schema/offers.schema';
 
       inject: [ConfigService],
     }),
+    AgendaModule.forRoot({
+      db: {
+        address: 'mongodb://127.0.0.1:27017/lootdealsv2',
+      },
+    }),
 
     MongooseModule.forFeature([
       { name: Product.name, schema: ProductSchema },
@@ -65,6 +77,7 @@ import { Offer, OfferSchema } from './offers/schema/offers.schema';
 
       { name: Platform.name, schema: PlatformSchema },
       { name: Setting.name, schema: SettingSchema },
+      { name: AmazonTracking.name, schema: AmazonTrackingSchema },
     ]),
     AdminsModule,
     AuthModule,
@@ -78,9 +91,12 @@ import { Offer, OfferSchema } from './offers/schema/offers.schema';
     NotificationModule,
     DashboardreportsModule,
     AppErrorModule,
+    ProductTrackingModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [
+    NotificationProcessor,
     AppService,
     {
       provide: APP_INTERCEPTOR,

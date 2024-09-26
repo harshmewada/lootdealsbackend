@@ -1,10 +1,24 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Public } from 'src/auth/auth.decorator';
 import { ProductQueryDto } from 'src/products/dto/product.dto';
 import { AppApisService } from './app-apis.service';
 import { AppErrorService } from 'src/app-error/app-error.service';
 import { AppErrorDto } from 'src/app-error/dto/apperror.dto';
 import { PaginationQueryDto } from 'src/commondto';
+import {
+  AddAmazonProductToTracking,
+  GetMyTrackingProducts,
+} from 'src/product-tracking/dto/amazon-tracking.dto';
+import { ProductTrackingService } from 'src/product-tracking/product-tracking.service';
+import { CateGoryTrackingDto } from 'src/category/dto/category.dto';
 
 @Controller('app')
 @Public()
@@ -12,6 +26,7 @@ export class AppApisController {
   constructor(
     private readonly appApisService: AppApisService,
     private readonly appErrorService: AppErrorService,
+    private readonly productTrackingService: ProductTrackingService,
   ) {}
 
   @Get('home')
@@ -69,5 +84,32 @@ export class AppApisController {
   @Post('registernotificationtoken')
   async registerNotificationToken(@Body('token') token: string) {
     return this.appApisService.registerNotificationToken(token);
+  }
+
+  @Post('amazon-product')
+  async addProductToTracking(@Body() data: AddAmazonProductToTracking) {
+    return await this.productTrackingService.addAmazonProductToTracking({
+      ...data,
+    });
+  }
+
+  @Get('amazon-product')
+  async getMyTrackingProducts(@Query() qeury: GetMyTrackingProducts) {
+    console.log('query ', qeury);
+    return await this.productTrackingService.getMyTrackingProducts(qeury);
+  }
+
+  @Delete('amazon-product')
+  async removeProductToTracking(@Body() data: AddAmazonProductToTracking) {
+    return await this.productTrackingService.removeAmazonProductToTracking({
+      ...data,
+    });
+  }
+
+  @Post('category-tracking')
+  async addCategoryToTrack(@Body() data: CateGoryTrackingDto) {
+    return await this.productTrackingService.addCategoryToTrack({
+      ...data,
+    });
   }
 }

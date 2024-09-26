@@ -1,0 +1,128 @@
+import {
+  Processor,
+  Define,
+  Every,
+  Schedule,
+  AgendaService,
+} from '@agent-ly/nestjs-agenda';
+import { Job } from 'agenda';
+import { NOTIFICATIONACTIONS } from 'src/constants';
+import { ProductDocument } from 'src/products/schema/product.schema';
+import {
+  ISendNotificationPayload,
+  NotificationPayloadDto,
+} from './dto/notification.dto';
+import admin from 'firebase-admin';
+import { ConfigService } from '@nestjs/config';
+import { ProductTrackingService } from 'src/product-tracking/product-tracking.service';
+import { NotificationService } from './notification.service';
+import { AmazonTrackingDocument } from 'src/product-tracking/schema/amazon-tracking.schema';
+import { ProductsService } from 'src/products/products.service';
+
+interface ISayYourName {
+  name: string;
+}
+interface SendNotificationToSubscribedCategories {
+  tokens: string[];
+  product: ProductDocument;
+}
+
+@Processor()
+export class NotificationProcessor {
+  constructor(
+    private readonly agendaService: AgendaService,
+    private readonly configService: ConfigService,
+    private readonly productService: ProductsService,
+
+    private readonly notificationService: NotificationService,
+  ) {}
+  getInterval() {
+    return this.configService.get('PRICE_DROP_CHECK_INTERVAL') || '10 minutes';
+  }
+  @Define('Say "Hello world!"')
+  @Every('10 minutes')
+  sayHelloWorld() {
+    this.notificationService.intervalProductTrackingData();
+  }
+
+  @Define(NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE)
+  checkMyProductPrice(job: Job<AmazonTrackingDocument>) {
+    this.productService.checkMyProductPriceDifference(job.attrs.data);
+    job.remove();
+  }
+
+  @Define(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION, {
+    concurrency: 1,
+  })
+  sendProductNotification(job: Job<ISendNotificationPayload>) {
+    const { title, body, imageUrl, tokens, data } = job.attrs.data;
+
+    // console.log('sending notification', job.attrs.data);
+    admin
+      .messaging()
+      .sendEachForMulticast({
+        notification: {
+          title,
+          body,
+          imageUrl,
+        },
+        tokens: tokens,
+        data: data as any,
+      })
+      .then((Res) => {
+        // console.log('send res', Res);
+        job.remove();
+        Res.responses.map((el) => {
+          if (el.error) {
+            // console.log('notification err', el.error);
+          }
+        });
+      })
+      .catch((err) => {
+        job.remove();
+
+        // console.log('sent err', err);
+      });
+    // console.log(`Your name is `, job.attrs.data);
+
+    // console.log('splitArr', splitArr);
+  }
+
+  @Define(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION_TO_SINGLE_USER)
+  sendProductNotificationToSingleUser(job: Job<ISendNotificationPayload>) {
+    this.sendProductNotification(job);
+  }
+  @Define(NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES)
+  async sayYourName(job: Job<SendNotificationToSubscribedCategories>) {
+    const splitArr = splitTokensArr(job.attrs.data.tokens);
+    splitArr.forEach((e) => {
+      this.agendaService.now(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION, {
+        title: 'A new product has Been added',
+        body: `${job.attrs.data.product.productName}`,
+        imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
+          job.attrs.data.product.productImage
+        }`,
+        data: {
+          productName: job.attrs.data.product.productName,
+          _id: job.attrs.data.product._id.toString(),
+          type: 'Product',
+        },
+        tokens: e,
+      });
+    });
+
+    await job.remove();
+
+    // console.log('splitArr', splitArr);
+  }
+}
+
+const splitTokensArr = (tokens: string[]) => {
+  const max = 500;
+
+  const empties = new Array(Math.ceil(tokens.length / max));
+
+  const dividedArrs = empties.fill('_').map((i) => tokens.splice(0, max));
+
+  return dividedArrs;
+};
