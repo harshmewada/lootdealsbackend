@@ -577,8 +577,8 @@ const transformAmazonProduct = (item: any) => {
   return {
     productName: item.ItemInfo.Title.DisplayValue,
     productUrl: item.DetailPageURL,
-    salePrice: 120,
-    // salePrice: item.Offers.Listings[0].Price.Amount,
+    // salePrice: 120,
+    salePrice: item.Offers.Listings[0].Price.Amount,
     basePrice:
       item.Offers.Listings[0].Price.Amount +
       item.Offers.Listings[0].Price.Savings.Amount,
