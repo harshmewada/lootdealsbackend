@@ -425,13 +425,15 @@ export class AppApisService {
   }
 
   async registerNotificationToken(token: string) {
-    const findOne = await this.amazonTracking.findOne({
-      notificationToken: token,
-    });
-    if (!findOne)
-      return await this.amazonTracking.create({ notificationToken: token });
+    if (token) {
+      const findOne = await this.amazonTracking.findOne({
+        notificationToken: token,
+      });
+      if (!findOne)
+        return await this.amazonTracking.create({ notificationToken: token });
 
-    return findOne;
+      return findOne;
+    }
   }
 
   async getProducts(query: ProductQueryDto) {

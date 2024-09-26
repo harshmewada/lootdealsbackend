@@ -67,11 +67,12 @@ export class AppService implements OnApplicationBootstrap {
   }
   async moveAllNotificationTokenToNewArchitecture() {
     const token = await this.notificationToken.find();
-
-    await this.amazonTracking.insertMany(
-      token.map((d) => ({ notificationToken: d.token })),
-    );
-    await this.notificationToken.deleteMany({});
+    if (token.length > 0) {
+      await this.amazonTracking.insertMany(
+        token.map((d) => ({ notificationToken: d.token })),
+      );
+      await this.notificationToken.deleteMany({});
+    }
   }
   async generateDummyTrackingTokens() {
     await this.amazonTracking.insertMany(
