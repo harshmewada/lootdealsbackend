@@ -429,7 +429,7 @@ export class AppApisService {
       const findOne = await this.amazonTracking.findOne({
         notificationToken: token,
       });
-      if (!findOne)
+      if (!findOne && token)
         return await this.amazonTracking.create({ notificationToken: token });
 
       return findOne;
