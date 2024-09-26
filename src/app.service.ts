@@ -29,7 +29,7 @@ export class AppService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     // await this.generateDummyTrackingTokens();
-    await this.moveAllNotificationTokenToNewArchitecture();
+    // await this.moveAllNotificationTokenToNewArchitecture();
 
     const listAllProducts = await this.Products.find().select('productImage');
     const listAllCategories = await this.Categorys.find().select(
