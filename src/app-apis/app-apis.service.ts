@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage } from 'mongoose';
 import { Category } from 'src/category/schema/category.schema';
@@ -426,16 +426,20 @@ export class AppApisService {
 
   async registerNotificationToken(token: string) {
     // console.log('registerNotificationToken', token);
-    if (token) {
-      const findOne = await this.amazonTracking.findOne({
-        notificationToken: token,
-      });
-      // console.log('findToken', findOne);
-      if (!findOne && token) {
-        return await this.amazonTracking.create({ notificationToken: token });
-      }
+    try {
+      if (token) {
+        const findOne = await this.amazonTracking.findOne({
+          notificationToken: token,
+        });
+        // console.log('findToken', findOne);
+        if (!findOne && token) {
+          return await this.amazonTracking.create({ notificationToken: token });
+        }
 
-      return findOne;
+        return findOne;
+      }
+    } catch (error) {
+      throw new BadRequestException(error);
     }
   }
 
