@@ -47,7 +47,7 @@ export class SendNotificationProcessor extends WorkerHost {
   async process(job: Job<ISendNotificationPayload>) {
     const { title, body, imageUrl, tokens, data } = job.data;
     const splitArr = splitTokensArr(job.data.tokens);
-    console.log('splitArr', splitArr.length);
+    // console.log('splitArr', splitArr.length);
     splitArr.forEach(
       (e, eI) =>
         this.firebaseNotification.add(
@@ -85,23 +85,28 @@ export class SendNotificationProcessor extends WorkerHost {
 @Processor(NOTIFICATIONACTIONS.SEND_FIREBASE_NOTIFICATION, { concurrency: 20 })
 export class FirebaseNotificationProcessor extends WorkerHost {
   async process(job: Job<ISendNotificationPayload>) {
-    const { title, body, imageUrl, tokens, data } = job.data;
-    console.log('tokens', tokens.length);
-    const firebaseNotiResponse = await admin.messaging().sendEachForMulticast({
-      notification: {
-        title,
-        body,
-        imageUrl,
-      },
-      tokens: tokens,
-      data: data as any,
-    });
-
-    console.log('firebaseNotiResponse', {
-      jobId: job.token,
-      success: firebaseNotiResponse.successCount,
-      failure: firebaseNotiResponse.failureCount,
-    });
+    try {
+      const { title, body, imageUrl, tokens, data } = job.data;
+      // console.log('tokens', tokens.length);
+      const firebaseNotiResponse = await admin
+        .messaging()
+        .sendEachForMulticast({
+          notification: {
+            title,
+            body,
+            imageUrl,
+          },
+          tokens: tokens,
+          data: data as any,
+        });
+      console.log('firebaseNotiResponse', {
+        jobId: job.token,
+        success: firebaseNotiResponse.successCount,
+        failure: firebaseNotiResponse.failureCount,
+      });
+    } catch (error) {
+      console.log('send notification error', error);
+    }
   }
 }
 
