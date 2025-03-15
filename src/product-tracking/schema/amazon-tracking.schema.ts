@@ -10,7 +10,7 @@ export type AmazonTrackingDocument = HydratedDocument<AmazonTracking>;
 
 @Schema({ timestamps: true })
 export class AmazonTracking {
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   notificationToken: string;
 
   @Prop([

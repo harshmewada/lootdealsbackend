@@ -20,10 +20,44 @@ import {
   PlatformSchema,
 } from 'src/platforms/schema/platforms.schema';
 import { Category, CategorySchema } from 'src/category/schema/category.schema';
+import {
+  ProductPriceCheckProcessor,
+  SendNotificationProcessor,
+  SubscribedCategoriesNotificationProcessor,
+} from './notification.processor';
+import { BullModule } from '@nestjs/bullmq';
+import { NOTIFICATIONACTIONS } from 'src/constants';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     ProductsModule,
+    ConfigModule,
+    BullModule.registerQueue({
+      name: NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE,
+    }),
+    BullModule.registerQueue({
+      name: NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION,
+      defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+    }),
+    BullModule.registerQueue({
+      name: NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES,
+      defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+    }),
+
+    BullModule.registerQueue({
+      name: NOTIFICATIONACTIONS.SEND_FIREBASE_NOTIFICATION,
+      defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+    }),
     MongooseModule.forFeature([
       { name: NotificationToken.name, schema: NotificationTokenSchema },
       { name: AmazonTracking.name, schema: AmazonTrackingSchema },

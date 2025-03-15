@@ -8,7 +8,9 @@ import {
 } from './dto/amazon-tracking.dto';
 import { ProductsService } from 'src/products/products.service';
 import { CateGoryTrackingDto } from 'src/category/dto/category.dto';
-import { AgendaService } from '@agent-ly/nestjs-agenda';
+import { InjectQueue } from '@nestjs/bullmq';
+import { NOTIFICATIONACTIONS } from 'src/constants';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class ProductTrackingService {
@@ -17,7 +19,13 @@ export class ProductTrackingService {
     private amazonTracking: Model<AmazonTracking>,
 
     private productService: ProductsService,
-    private agendaService: AgendaService,
+
+    @InjectQueue(NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE)
+    private readonly priceCheckQueue: Queue,
+    @InjectQueue(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION)
+    private readonly notificationQueue: Queue,
+    @InjectQueue(NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES)
+    private readonly categorynotificationQueue: Queue,
   ) {}
 
   async addAmazonProductToTracking(data: AddAmazonProductToTracking) {

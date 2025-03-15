@@ -425,12 +425,15 @@ export class AppApisService {
   }
 
   async registerNotificationToken(token: string) {
+    // console.log('registerNotificationToken', token);
     if (token) {
       const findOne = await this.amazonTracking.findOne({
         notificationToken: token,
       });
-      if (!findOne && token)
+      // console.log('findToken', findOne);
+      if (!findOne && token) {
         return await this.amazonTracking.create({ notificationToken: token });
+      }
 
       return findOne;
     }

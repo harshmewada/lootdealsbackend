@@ -26,8 +26,9 @@ import {
   AmazonTracking,
   AmazonTrackingDocument,
 } from 'src/product-tracking/schema/amazon-tracking.schema';
-import { AgendaService } from '@agent-ly/nestjs-agenda';
 import { NOTIFICATIONACTIONS } from 'src/constants';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 const amazonApi = require('amazon-paapi');
 
@@ -42,7 +43,13 @@ export class ProductsService {
 
     private configService: ConfigService,
     private notificationService: NotificationService,
-    private agendaService: AgendaService, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue, // @InjectQueue('queue') private queue: Queue,
+
+    @InjectQueue(NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE)
+    private readonly priceCheckQueue: Queue,
+    @InjectQueue(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION)
+    private readonly notificationQueue: Queue,
+    @InjectQueue(NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES)
+    private readonly categorynotificationQueue: Queue,
   ) {}
   amazonCreds = {
     AccessKey: this.configService.get('AMAZON_ACCESS_KEY'),
@@ -95,19 +102,22 @@ export class ProductsService {
       //     type: 'Product',
       //   } as any,
       // });
-      this.agendaService.now(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION, {
-        title: `${createdProduct.discount}%off - ${createdProduct.productName}`,
-        body: 'New Loot Deal Added',
-        imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
-          createdProduct.productImage
-        }`,
-        data: {
-          productName: createdProduct.productName,
-          _id: createdProduct._id.toString(),
-          type: 'Product',
-        } as any,
-        tokens: tokens.map((e) => e.notificationToken),
-      });
+      this.notificationQueue.add(
+        NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION,
+        {
+          title: `${createdProduct.discount}%off - ${createdProduct.productName}`,
+          body: 'New Loot Deal Added',
+          imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
+            createdProduct.productImage
+          }`,
+          data: {
+            productName: createdProduct.productName,
+            _id: createdProduct._id.toString(),
+            type: 'Product',
+          } as any,
+          tokens: tokens.map((e) => e.notificationToken),
+        },
+      );
     }
     this.notificationService.sendSelectedCategoryNotifications(
       createProductDto.categoryId.split(','),
@@ -270,8 +280,8 @@ export class ProductsService {
                       parseFloat(el.salePrice),
                       parseFloat(findInTransformedResponse.salePrice),
                     );
-                    this.agendaService.now(
-                      NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION_TO_SINGLE_USER,
+                    this.notificationQueue.add(
+                      NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION,
                       {
                         title: `Price Drop ${priceDiscount}% 🔻 - Price dropped to  ${this.configService.get(
                           'CURRENCY',
@@ -550,19 +560,22 @@ export class ProductsService {
     ]);
     await Promise.all(
       products.map(async (el) => {
-        this.agendaService.now(NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION, {
-          title: `${el.discount}%off - ${el.productName}`,
-          body: 'New Loot Deal Added',
-          imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
-            el.productImage
-          }`,
-          data: {
-            productName: el.productName,
-            _id: el._id.toString(),
-            type: 'Product',
-          } as any,
-          tokens: tokens.map((e) => e.notificationToken),
-        });
+        this.notificationQueue.add(
+          NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION,
+          {
+            title: `${el.discount}%off - ${el.productName}`,
+            body: 'New Loot Deal Added',
+            imageUrl: `${this.configService.get('BASE_IMAGE_URL')}/${
+              el.productImage
+            }`,
+            data: {
+              productName: el.productName,
+              _id: el._id.toString(),
+              type: 'Product',
+            } as any,
+            tokens: tokens.map((e) => e.notificationToken),
+          },
+        );
         // await this.notificationService.sendNotification({
         // title: `${el.discount}%off - ${el.productName}`,
         // body: 'New Loot Deal Added',

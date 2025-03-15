@@ -6,8 +6,9 @@ import { NotificationToken } from 'src/app-apis/shcema/notificationToken.schema'
 import { NotificationPayloadDto } from './dto/notification.dto';
 import { AmazonTracking } from 'src/product-tracking/schema/amazon-tracking.schema';
 import { ProductDocument } from 'src/products/schema/product.schema';
-import { AgendaService } from '@agent-ly/nestjs-agenda';
 import { NOTIFICATIONACTIONS } from 'src/constants';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 const serviceAccount = require('../../config/firebase.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -21,7 +22,11 @@ export class NotificationService {
     @InjectModel(AmazonTracking.name)
     private amazonTracking: Model<AmazonTracking>,
 
-    private readonly agendaService: AgendaService,
+    @InjectQueue(NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES)
+    private readonly categorynotificationQueue: Queue,
+
+    @InjectQueue(NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE)
+    private readonly priceCheckQueue: Queue,
   ) {}
 
   async sendNotification(data: NotificationPayloadDto) {
@@ -122,7 +127,7 @@ export class NotificationService {
       if (data)
         // await this.sendCategoryNotification
         // console.log('findCategoryTokens', findCategoryTokens);
-        this.agendaService.now(
+        this.categorynotificationQueue.add(
           NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES,
           { tokens: data, product },
         );
@@ -149,7 +154,7 @@ export class NotificationService {
     ]);
 
     productData.forEach((e) =>
-      this.agendaService.now(NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE, e),
+      this.priceCheckQueue.add(NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE, e),
     );
   }
 }

@@ -8,7 +8,6 @@ import {
   PlatformSchema,
 } from 'src/platforms/schema/platforms.schema';
 import { ConfigModule } from '@nestjs/config';
-import { BullModule } from '@nestjs/bull';
 import {
   NotificationToken,
   NotificationTokenSchema,
@@ -20,12 +19,29 @@ import {
   AmazonTrackingSchema,
 } from 'src/product-tracking/schema/amazon-tracking.schema';
 import { ProductTrackingService } from 'src/product-tracking/product-tracking.service';
+import { BullModule } from '@nestjs/bullmq';
+import { NOTIFICATIONACTIONS } from 'src/constants';
 
 @Module({
   imports: [
     BullModule.registerQueue({
-      name: 'queue',
+      name: NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE,
     }),
+    BullModule.registerQueue({
+      name: NOTIFICATIONACTIONS.SEND_PRODUCT_NOTIFICATION,
+      defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+    }),
+    BullModule.registerQueue({
+      name: NOTIFICATIONACTIONS.SEND_TO_SUBSCRIBED_CATEGORIES,
+      defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+    }),
+
     ConfigModule,
     MongooseModule.forFeature([
       { name: Product.name, schema: ProductSchema },

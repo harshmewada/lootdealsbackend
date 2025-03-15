@@ -12,10 +12,12 @@ export class DashboardreportsService {
     private notificationTokens: Model<NotificationToken>,
   ) {}
   async getDashboard() {
-    const totalProducts = await this.products.count();
-    const expiredProducts = await this.products.count({ isExpired: true });
+    const totalProducts = await this.products.countDocuments();
+    const expiredProducts = await this.products.countDocuments({
+      isExpired: true,
+    });
 
-    const totalUsers = await this.notificationTokens.count();
+    const totalUsers = await this.notificationTokens.countDocuments();
 
     return {
       products: totalProducts,

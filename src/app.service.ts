@@ -12,6 +12,9 @@ import { Setting } from './setting/schema/setting.schema';
 import { AmazonTracking } from './product-tracking/schema/amazon-tracking.schema';
 import * as crypto from 'crypto';
 import { NotificationToken } from './app-apis/shcema/notificationToken.schema';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { NOTIFICATIONACTIONS } from './constants';
 @Injectable()
 export class AppService implements OnApplicationBootstrap {
   constructor(
@@ -25,9 +28,15 @@ export class AppService implements OnApplicationBootstrap {
     @InjectModel(Setting.name) private Settings: Model<Setting>,
     @InjectModel(AmazonTracking.name)
     private amazonTracking: Model<AmazonTracking>,
+
+    @InjectQueue('price-check-queue') private readonly priceCheckQueue: Queue,
+
+    @InjectQueue(NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE)
+    private readonly myProductpriceCheckQueue: Queue,
   ) {}
 
   async onApplicationBootstrap() {
+    console.log('onApplicationBootstrap');
     // await this.generateDummyTrackingTokens();
     // await this.moveAllNotificationTokenToNewArchitecture();
 
@@ -64,6 +73,22 @@ export class AppService implements OnApplicationBootstrap {
       const fpath = path.join(__dirname, '../uploads', file);
       existsSync(fpath) && unlinkSync(fpath);
     });
+
+    this.priceCheckQueue.add(
+      'price-check-queue',
+      {},
+      { repeat: { pattern: this.configService.get('PRICE_CRON_INTERVAL') } },
+    );
+
+    this.myProductpriceCheckQueue.add(
+      NOTIFICATIONACTIONS.CHECK_MY_PRODUCT_PRICE,
+      {},
+      {
+        repeat: {
+          pattern: `30 * * * *`,
+        },
+      },
+    );
   }
   async moveAllNotificationTokenToNewArchitecture() {
     const token = await this.notificationToken.find();
@@ -76,7 +101,7 @@ export class AppService implements OnApplicationBootstrap {
   }
   async generateDummyTrackingTokens() {
     await this.amazonTracking.insertMany(
-      new Array(10000).fill('_').map((e, eI) => {
+      new Array(100000).fill('_').map((e, eI) => {
         return {
           notificationToken: crypto.randomBytes(20).toString('hex'),
           categories: [
@@ -102,6 +127,7 @@ export class AppService implements OnApplicationBootstrap {
         };
       }),
     );
+    console.log('dummy tokens generated');
   }
   getHello(): string {
     const dbUser = this.configService.get<string>('DATABASE_USER');
