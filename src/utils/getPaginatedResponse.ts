@@ -87,7 +87,7 @@ export const getCursorPaginatedResult = async (
     hasPrev = !!(await model.findOne(q));
   }
 
-  const totalCount = await model.count(call(query));
+  const totalCount = await model.countDocuments(call(query));
 
   return {
     data: data,
@@ -139,7 +139,7 @@ export const getPagination = async (
     const previous: ObjectId = query.page == 1 ? null : result[0]?._id;
     delete query.next;
     delete query.previous;
-    const totalCount = await model.count(call(query));
+    const totalCount = await model.countDocuments(call(query));
 
     return {
       data: result,
