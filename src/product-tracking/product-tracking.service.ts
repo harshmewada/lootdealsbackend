@@ -90,8 +90,7 @@ export class ProductTrackingService {
       notificationToken: data.notificationToken,
     });
     if (findRecord) {
-      return await this.amazonTracking.findOneAndUpdate({
-        notificationToken: data.notificationToken,
+      return await this.amazonTracking.findOneAndUpdate(findRecord._id, {
         categories: data.categories,
       });
     } else {
