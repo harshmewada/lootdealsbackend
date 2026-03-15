@@ -180,12 +180,14 @@ export class ProductsService {
     const requestParameters = {
       ItemIds: [productId],
       Condition: 'New',
+      Merchant: 'All',
       Resources: [
         'Images.Primary.Medium',
         'Images.Primary.Large',
-
         'ItemInfo.Title',
         'Offers.Listings.Price',
+        'Offers.Listings.Availability.Message',
+        'Offers.Summaries.LowestPrice',
       ],
     };
 
@@ -207,14 +209,25 @@ export class ProductsService {
           );
         }
         const item = response.ItemsResult.Items[0];
+
+        const listing = item?.Offers?.Listings?.[0];
+
+        const salePrice =
+          listing?.Price?.Amount ??
+          item?.Offers?.Summaries?.[0]?.LowestPrice?.Amount ??
+          null;
+
+        const basePrice =
+          listing?.Price?.Amount && listing?.Price?.Savings?.Amount
+            ? listing.Price.Amount + listing.Price.Savings.Amount
+            : salePrice;
+        console.log('item', item);
         const productResponse: IAmazonProduct = {
-          productName: item.ItemInfo.Title.DisplayValue,
-          productUrl: item.DetailPageURL,
-          salePrice: item.Offers.Listings[0].Price.Amount,
-          basePrice:
-            item.Offers.Listings[0].Price.Amount +
-            item.Offers.Listings[0].Price.Savings.Amount,
-          productImage: item.Images.Primary.Large.URL,
+          productName: item?.ItemInfo?.Title?.DisplayValue,
+          productUrl: item?.DetailPageURL,
+          salePrice: salePrice,
+          basePrice: basePrice,
+          productImage: item?.Images?.Primary?.Large?.URL,
           amazonProductId: productId,
         };
         return productResponse;

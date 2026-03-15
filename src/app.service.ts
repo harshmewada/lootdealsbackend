@@ -41,12 +41,10 @@ export class AppService implements OnApplicationBootstrap {
     // await this.moveAllNotificationTokenToNewArchitecture();
 
     const listAllProducts = await this.Products.find().select('productImage');
-    const listAllCategories = await this.Categorys.find().select(
-      'categoryImage',
-    );
-    const listAllPlatforms = await this.Platforms.find().select(
-      'platformImage',
-    );
+    const listAllCategories =
+      await this.Categorys.find().select('categoryImage');
+    const listAllPlatforms =
+      await this.Platforms.find().select('platformImage');
     const listAllOfferss = await this.Offers.find().select('offerImage');
     const telegramBanner = await this.Settings.findOne();
 
@@ -55,8 +53,8 @@ export class AppService implements OnApplicationBootstrap {
       ...listAllCategories.map((e) => e.categoryImage),
       ...listAllPlatforms.map((e) => e.platformImage),
       ...listAllOfferss.map((e) => e.offerImage),
-      telegramBanner.telegramBannerImage,
-      telegramBanner.trackingBannerImage,
+      telegramBanner?.telegramBannerImage,
+      telegramBanner?.trackingBannerImage,
     ];
 
     const fileList = readdirSync(path.join(__dirname, '../uploads'));
